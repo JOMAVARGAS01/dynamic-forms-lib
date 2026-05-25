@@ -1,0 +1,99 @@
+@if (form) {
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-wrapper">
+  @if (config.layout === 'steps') {
+  <mat-horizontal-stepper [linear]="config.stepper?.linear ?? true" class="mb-4">
+    @for (entry of groupEntries; track entry.group.label) {
+    <mat-step [completed]="isGroupValid(entry.group)" [hasError]="!isGroupValid(entry.group)">
+      <ng-template matStepLabel>{{ entry.group.label }}</ng-template>
+      <div class="fields-grid pt-2">
+        @for (field of entry.group.fields; track field.name) {
+        @if (isVisible(field)) {
+        <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          <app-field [appearance]="appearance" [field]="field" [form]="form"
+            (fileChange)="onFileChange($event)"></app-field>
+        </div>
+        }
+        }
+      </div>
+      <div class="step-actions mt-4">
+        <button mat-button matStepperPrevious type="button">Volver</button>
+        <button mat-button matStepperNext type="button">Siguiente</button>
+        @if (entry.isLast) {
+        <button mat-button type="submit">Guardar Cambios</button>
+        }
+      </div>
+    </mat-step>
+    }
+  </mat-horizontal-stepper>
+  }
+
+  @if (config.layout === 'tabs') {
+  <mat-tab-group animationDuration="0ms" class="mb-4">
+    @for (group of config.groups; track group.label) {
+    <mat-tab [label]="group.label">
+      <div class="fields-grid tab-content-padding">
+        @for (field of group.fields; track field.name) {
+        @if (isVisible(field)) {
+        <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          <app-field [appearance]="appearance" [field]="field" [form]="form"
+            (fileChange)="onFileChange($event)"></app-field>
+        </div>
+        }
+        }
+      </div>
+    </mat-tab>
+    }
+  </mat-tab-group>
+  }
+
+  @if (config.layout === 'accordion') {
+  @for (group of config.groups; track group.label) {
+  <mat-accordion class="mb-4 d-block">
+    <mat-expansion-panel [expanded]="initialExpansionState">
+      <mat-expansion-panel-header>
+        <mat-panel-title>{{ group.label }}</mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="fields-grid pt-2">
+        @for (field of group.fields; track field.name) {
+        @if (isVisible(field)) {
+        <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          <app-field [appearance]="appearance" [field]="field" [form]="form"
+            (fileChange)="onFileChange($event)"></app-field>
+        </div>
+        }
+        }
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+  }
+  }
+
+  @if (config.layout === 'simple') {
+  @for (group of config.groups; track group.label) {
+  <mat-card appearance="outlined" class="mb-4">
+    <mat-card-header>
+      <mat-card-title>{{ group.label }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="pt-2">
+      <div class="fields-grid">
+        @for (field of group.fields; track field.name) {
+        @if (isVisible(field)) {
+        <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          <app-field [appearance]="appearance" [field]="field" [form]="form"
+            (fileChange)="onFileChange($event)"></app-field>
+        </div>
+        }
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+  }
+  }
+
+  <div class="actions">
+    <button matButton="outlined" type="button" (click)="cancel.emit()">Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="isFormInvalid">Guardar Cambios</button>
+  </div>
+
+</form>
+}

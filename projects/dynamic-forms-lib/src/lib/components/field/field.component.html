@@ -1,0 +1,189 @@
+<ng-container [formGroup]="form">
+    @if (isSimpleInput(field.type)) {
+    <mat-form-field [appearance]="appearance" class="full-width">
+        <mat-label>{{field.label}}</mat-label>
+
+        <!-- Prefix -->
+        @if (field.prefix) {
+        <span matPrefix class="field-prefix-suffix">
+            @if (field.prefix.isIcon !== false) {
+            <mat-icon>{{field.prefix.icon}}</mat-icon>
+            } @else {
+            {{field.prefix.text}}
+            }
+            &nbsp;
+        </span>
+        }
+
+        @switch (field.type) {
+        @case ('textarea') {
+        <textarea matInput [formControlName]="field.name"></textarea>
+        }
+        @case ('text') { <input matInput [formControlName]="field.name" /> }
+        @case ('email') { <input matInput type="email" [formControlName]="field.name" /> }
+        @case ('number') { <input matInput type="number" [formControlName]="field.name" /> }
+        @case ('password') {
+        <input matInput [type]="hidePassword() ? 'password' : 'text'" [formControlName]="field.name" />
+        <button matSuffix mat-icon-button type="button" (click)="togglePasswordVisibility($event)"
+            [attr.aria-label]="hidePassword() ? 'Mostrar contraseña' : 'Ocultar contraseña'" tabindex="-1">
+            <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        }
+        @case ('tel') { <input matInput type="tel" [formControlName]="field.name" /> }
+        @case ('url') { <input matInput type="url" [formControlName]="field.name" /> }
+        @case ('color') {
+        <input matInput type="color" [formControlName]="field.name"
+            style="width: 50px; padding: 0; border: none; background: none; cursor: pointer;" />
+        }
+        @case ('time') { <input matInput type="time" [formControlName]="field.name" /> }
+        @case ('week') { <input matInput type="week" [formControlName]="field.name" /> }
+        @case ('month') { <input matInput type="month" [formControlName]="field.name" /> }
+        @default { <input matInput [type]="field.type" [formControlName]="field.name" /> }
+        }
+
+        <!-- Suffix -->
+        @if (field.suffix) {
+        <span matSuffix class="field-prefix-suffix">
+            @if (field.suffix.isIcon !== false) {
+            <mat-icon>{{field.suffix.icon}}</mat-icon>
+            } @else {
+            {{field.suffix.text}}
+            }
+            &nbsp;
+        </span>
+        }
+
+        @if (hasError()) { <mat-error>{{getErrorMessage()}}</mat-error> }
+    </mat-form-field>
+    }
+
+    @if (!isSimpleInput(field.type)) {
+    @switch (field.type) {
+
+    @case ('date') {
+    <mat-form-field [appearance]="appearance" class="full-width">
+        <mat-label>{{field.label}}</mat-label>
+        <input matInput [matDatepicker]="picker" [formControlName]="field.name" />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        @if (hasError()) { <mat-error>{{getErrorMessage()}}</mat-error> }
+    </mat-form-field>
+    }
+    @case ('select') {
+    <mat-form-field [appearance]="appearance" class="full-width">
+        <mat-label>{{field.label}}</mat-label>
+        <mat-select [formControlName]="field.name">
+            @if (isLoadingOptions()) {
+            <mat-option disabled class="loading-option">
+                <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
+                Cargando datos...
+            </mat-option>
+            }
+            @for (opt of allOptions(); track opt.value) {
+            <mat-option [value]="opt.value">{{opt.label}}</mat-option>
+            }
+        </mat-select>
+        @if (hasError()) { <mat-error>{{getErrorMessage()}}</mat-error> }
+    </mat-form-field>
+    }
+    @case ('autocomplete') {
+    <mat-form-field [appearance]="appearance" class="full-width">
+        <mat-label>{{field.label}}</mat-label>
+        <input matInput [formControlName]="field.name" [matAutocomplete]="auto" />
+        @if (form.get(field.name)?.value) {
+        <button matSuffix mat-icon-button type="button" aria-label="Limpiar"
+            (click)="form.get(field.name)?.reset()">
+            <mat-icon>close</mat-icon>
+        </button>
+        }
+        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayOption">
+            @for (opt of filteredOptions(); track opt.value) {
+            <mat-option [value]="opt.value">
+                {{opt.label}}
+            </mat-option>
+            }
+            @if (isLoadingOptions()) {
+            <mat-option disabled class="loading-option">
+                <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
+                Buscando...
+            </mat-option>
+            } @else if (!isLoadingOptions() && filteredOptions().length === 0 && form.get(field.name)?.value) {
+            <mat-option disabled>
+                No se encontraron resultados.
+            </mat-option>
+            }
+        </mat-autocomplete>
+
+        @if (hasError()) {
+        <mat-error>{{getErrorMessage()}}</mat-error>
+        }
+    </mat-form-field>
+
+    }
+    @case ('file') {
+    <div class="full-width file-container">
+        <label class="file-label">{{field.label}}</label>
+        <div class="file-content-row">
+            <button matButton="elevated" color="primary" type="button" (click)="fileInput.click()">
+                📂 Seleccionar Archivo
+            </button>
+            <input type="file" #fileInput (change)="handleFile($event)" hidden />
+            <span class="file-name">{{ fileName() || 'Ningún archivo seleccionado' }}</span>
+        </div>
+        @if (hasError()) { <mat-error class="error-text">Archivo requerido</mat-error> }
+    </div>
+    }
+    @case ('checkbox') {
+    <div class="full-width checkbox-container">
+        <mat-checkbox [formControlName]="field.name">{{field.label}}</mat-checkbox>
+    </div>
+    }
+    @case ('checkbox-multiple') {
+    <div class="option-group">
+        <div class="option-item">
+            <label class="field-label">{{ field.label }}</label>
+            @for (opt of allOptions(); track opt.value) {
+            <mat-checkbox [checked]="form.get(field.name)?.value?.includes(opt.value)"
+                (change)="onToggleCheckboxMultiple(field.name, opt.value, $event.checked)">
+                {{ opt.label }}
+            </mat-checkbox>
+            }
+            @if (hasError()) { <mat-error>{{getErrorMessage()}}</mat-error> }
+        </div>
+    </div>
+    }
+    @case ('radio') {
+    <div class="option-group" [ngClass]="{'invalid': hasError()}">
+        <div class="option-item">
+            <label class="field-label">{{ field.label }}</label>
+
+            <mat-radio-group [formControlName]="field.name" (matRadioChange)="markRadioAsTouched(field.name)">
+
+                @for (opt of allOptions(); track opt.value) {
+                <mat-radio-button [value]="opt.value">
+                    {{ opt.label }}
+                </mat-radio-button>
+                }
+
+            </mat-radio-group>
+
+            @if (hasError()) {
+            <mat-error>{{ getErrorMessage() }}</mat-error>
+            }
+        </div>
+    </div>
+    }
+    @case ('switch') {
+    <div class="full-width checkbox-container">
+        <mat-slide-toggle [formControlName]="field.name"
+            (change)="onSwitchChange($event)">{{field.label}}</mat-slide-toggle>
+    </div>
+    }
+    @default {
+    <div class="unsupported-field">
+        Tipo de campo '{{field.type}}' no soportado o no implementado.
+    </div>
+    }
+    }
+    }
+</ng-container>

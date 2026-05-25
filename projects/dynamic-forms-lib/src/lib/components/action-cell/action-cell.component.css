@@ -1,0 +1,4 @@
+.flex { display:flex }
+.items-center { align-items:center }
+.space-x-1 > * + * { margin-left: 8px }
+.h-full { height: 100% }

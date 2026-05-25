@@ -1,0 +1,21 @@
+{
+  "name": "@dynamic-forms-lib/core",
+  "version": "0.1.0",
+  "description": "Dynamic Forms Library for Angular (internal)",
+  "module": "fesm2022/dynamic-forms-lib-core.mjs",
+  "types": "index.d.ts",
+  "peerDependencies": {
+    "@angular/common": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/forms": "^20.0.0",
+    "@angular/material": "^20.0.0",
+    "ag-grid-angular": "^34.0.0",
+    "ag-grid-community": "^34.0.0"
+  },
+  "peerDependenciesMeta": {
+    "xlsx-js-style": { "optional": true }
+  },
+  "keywords": ["angular", "forms", "ag-grid", "dynamic"],
+  "license": "MIT",
+  "sideEffects": false
+}

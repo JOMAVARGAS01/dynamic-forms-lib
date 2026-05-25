@@ -1,0 +1,37 @@
+ .form-wrapper {
+     max-width: 1200px;
+     margin: 0 auto;
+     padding: 20px;
+ }
+
+ .fields-grid {
+     display: grid;
+     grid-template-columns: repeat(12, 1fr);
+     padding: 10px 0;
+     gap: 0.5rem;
+ }
+
+ .tab-content-padding {
+     padding-top: 1.5rem;
+ }
+
+ .mb-4 {
+     margin-bottom: 1.5rem;
+ }
+
+ .d-block {
+     display: block;
+ }
+
+ .pt-2 {
+     padding-top: 1rem;
+ }
+
+ .actions {
+     display: flex;
+     justify-content: flex-end;
+     gap: 1rem;
+     margin-top: 2rem;
+     border-top: 1px solid #eee;
+     padding-top: 1rem;
+ }
