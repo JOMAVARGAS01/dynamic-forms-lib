@@ -2,6 +2,21 @@
 
 All notable changes to @dynamic-forms-lib/core will be documented in this file.
 
+## [0.1.2] - 2026-06-12
+
+### Added
+- **i18n / Translations**: `DYNAMIC_FORMS_TRANSLATIONS` `InjectionToken` for language-agnostic i18n. The library ships no hardcoded text — the host app provides a `DynamicFormsTranslations` object (crud, form, dialog, field, actionCell, snackbar namespaces) via `provideDynamicFormsTranslations()` or by overriding the token directly. `DEFAULT_TRANSLATIONS` (Spanish) is the fallback when no provider is registered, preserving zero-config backward compatibility. `form.invalidFields` and `snackbar.close` keys added.
+
+### Changed
+- **`CrudManagerComponent` is now signal-based** for reactive state. `gridColumnDefs` is a `computed()` that auto-derives whenever `columnDefs`, `showActions`, or the translations change — the previous manual regeneration via `effect()` is gone. `columnDefs` and `showActions` use the modern `input()` signal API.
+
+### Refactored
+- **`CrudManagerComponent` extracted helpers** for clarity and reuse:
+  - `showSnack(messageKey)` — single point for all translated snackbar feedback (replaces 9 inline duplicates; the `'Cerrar'` hardcode is gone).
+  - `buildRequestBody(formData, mode)` — encapsulates FormData → JSON/FormData body preparation and the manual ID generation for `add` mode.
+  - `executeRequest(method, url, body, successKey, errorKey)` — unifies the POST/PUT HTTP call, snackbar feedback, sidebar toggle, and grid refresh.
+- **`onExport` decomposed** into `buildExcelExport` (workbook construction) and `downloadFile` (browser download trigger) — the orchestrator is now 4 lines.
+
 ## [0.1.1] - 2026-06-12
 
 ### Fixed

@@ -60,6 +60,33 @@ That's it. One tag, full CRUD screen.
 - **4 AG Grid themes**: Alpine, Material, Balham, Quartz
 - Persisted to localStorage automatically
 
+### 🌍 Internationalization (i18n)
+
+The library is **language-agnostic by design** — it ships no hardcoded text. Your app provides translations via Angular's `InjectionToken`:
+
+```typescript
+import { provideDynamicFormsTranslations, DynamicFormsTranslations } from '@dynamic-forms-lib/core';
+
+const SPANISH: DynamicFormsTranslations = {
+  crud:    { add: 'Nuevo', export: 'Exportar', search: 'Buscar...', /* ... */ },
+  form:    { save: 'Guardar Cambios', cancel: 'Cancelar', /* ... */ },
+  dialog:  { confirmation: 'Confirmación', /* ... */ },
+  field:   { required: 'Este campo es requerido.', /* ... */ },
+  actionCell: { edit: 'Editar Registro', delete: 'Eliminar Registro' },
+  snackbar: { close: 'Cerrar' },
+};
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideDynamicFormsTranslations(SPANISH)
+  ]
+});
+```
+
+Switch languages at runtime by updating the same `Signal` you bound to the token. The grid headers, button labels, validation messages, dialog text, and snackbar action all react automatically.
+
+Default behavior: if no provider is registered, the token resolves to Spanish defaults — zero-config backward compatibility for existing consumers.
+
 ---
 
 ## 🚀 Quick Start
@@ -309,11 +336,11 @@ const config = {
 - [ ] Custom field types (extensibility API)
 - [ ] Input masking
 - [ ] Async validation
-- [ ] i18n / Translations
 - [ ] Custom validators
 - [ ] Form arrays / dynamic rows
 - [ ] Stackblitz live demo
 - [ ] Angular 21 Signal Forms integration
+- [x] i18n / Translations (v0.1.2)
 
 ---
 
