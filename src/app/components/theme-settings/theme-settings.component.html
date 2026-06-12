@@ -1,0 +1,57 @@
+<div class="settings-container">
+    <div class="header">
+        <h3>Theme Settings</h3>
+        <button mat-icon-button (click)="close.emit()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <div class="section">
+        <label>Mode</label>
+        <mat-button-toggle-group [value]="themeService.themeMode()" (change)="onModeChange($event.value)"
+            aria-label="Theme Mode">
+            <mat-button-toggle value="light" matTooltip="Light Mode">
+                <mat-icon>light_mode</mat-icon>
+            </mat-button-toggle>
+            <mat-button-toggle value="system" matTooltip="System Default">
+                <mat-icon>brightness_auto</mat-icon>
+            </mat-button-toggle>
+            <mat-button-toggle value="dark" matTooltip="Dark Mode">
+                <mat-icon>dark_mode</mat-icon>
+            </mat-button-toggle>
+        </mat-button-toggle-group>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="section">
+        <label>Color Palette</label>
+        <div class="palette-grid">
+            <button *ngFor="let palette of availablePalettes" class="palette-btn"
+                [class.active]="themeService.activePalette() === palette.value"
+                [style.background-color]="getPaletteColor(palette.value)" (click)="onPaletteChange(palette.value)"
+                [matTooltip]="palette.name">
+                @if(themeService.activePalette() === palette.value){
+                <mat-icon>check</mat-icon>
+                }
+            </button>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="section">
+        <label>AG-Grid Theme</label>
+        <mat-form-field appearance="outline">
+            <mat-label>Select AG-Grid Theme</mat-label>
+            <mat-select 
+                [value]="themeService.agGridTheme()" 
+                (selectionChange)="onAgGridThemeChange($event.value)"
+            >
+                <mat-option *ngFor="let theme of availableAgGridThemes" [value]="theme.value">
+                    {{ theme.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+</div>

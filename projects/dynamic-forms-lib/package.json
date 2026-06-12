@@ -1,9 +1,18 @@
 {
   "name": "@dynamic-forms-lib/core",
   "version": "0.1.0",
-  "description": "Dynamic Forms Library for Angular (internal)",
+  "description": "Enterprise CRUD screens with JSON config — AG Grid, dynamic Angular Material forms, Excel export, and theming",
   "module": "fesm2022/dynamic-forms-lib-core.mjs",
   "types": "index.d.ts",
+  "author": "José Manuel Vargas <jomavargas01@hotmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JOMAVARGAS01/dynamic-forms-lib"
+  },
+  "bugs": {
+    "url": "https://github.com/JOMAVARGAS01/dynamic-forms-lib/issues"
+  },
+  "homepage": "https://github.com/JOMAVARGAS01/dynamic-forms-lib",
   "peerDependencies": {
     "@angular/common": "^20.0.0",
     "@angular/core": "^20.0.0",
@@ -13,9 +22,26 @@
     "ag-grid-community": "^34.0.0"
   },
   "peerDependenciesMeta": {
-    "xlsx-js-style": { "optional": true }
+    "exceljs": {
+      "optional": true,
+      "description": "Required for Excel export from CrudManagerComponent"
+    }
   },
-  "keywords": ["angular", "forms", "ag-grid", "dynamic"],
+  "keywords": [
+    "angular",
+    "forms",
+    "dynamic-forms",
+    "crud",
+    "ag-grid",
+    "material",
+    "enterprise",
+    "json-form",
+    "form-builder",
+    "data-grid",
+    "admin-panel",
+    "angular-material",
+    "reactive-forms"
+  ],
   "license": "MIT",
   "sideEffects": false
 }

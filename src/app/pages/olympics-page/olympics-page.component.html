@@ -1,0 +1,19 @@
+<div style="padding: 0 0 0 30px;">
+    <h3>Filtros Externos</h3>
+    <mat-form-field appearance="outline">
+        <mat-label>Año de Olimpiada</mat-label>
+        <mat-select [(ngModel)]="selectedYear" (selectionChange)="onYearChange()">
+            <mat-option [value]="2000">2000</mat-option>
+            <mat-option [value]="2004">2004</mat-option>
+            <mat-option [value]="2008">2008</mat-option>
+            <mat-option [value]="2012">2012</mat-option>
+            <mat-option [value]="2016">2016</mat-option>
+            <mat-option [value]="2020">2020</mat-option>
+            <mat-option [value]="2024">2024</mat-option>
+        </mat-select>
+    </mat-form-field>
+</div>
+
+<app-crud-manager [formConfig]="formConfig" [columnDefs]="columnDefs" [title]="'Medallero Olímpico - ' + selectedYear"
+    [apiUrl]="apiUrl()" [createUrl]="createUrl" [updateUrl]="updateUrlBuilder" [deleteUrl]="deleteUrlBuilder">
+</app-crud-manager>

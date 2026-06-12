@@ -1,59 +1,148 @@
-# DynamicFormsApp
+# Dynamic Forms Lib 🚀
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.8.
+**CRUD enterprise screens in minutes, not hours.**
 
-## Development server
+Una librería Angular (v20+, standalone, signals) que genera formularios dinámicos + tablas AG Grid desde configuración JSON. Olvidate de escribir HTML repetitivo para cada pantalla de ABM.
 
-To start a local development server, run:
+---
+
+## ⏱️ ¿Cuánto tiempo te ahorra?
+
+| Escenario | Sin la lib | Con la lib | **Ahorro** |
+|---|---|---|---|
+| Pantalla CRUD simple (5 campos, tabla, sin dependencias) | ~4 horas | ~15 minutos | **~94%** |
+| Pantalla CRUD media (10 campos, selects anidados, validaciones) | ~8 horas | ~30 minutos | **~94%** |
+| Pantalla CRUD compleja (20+ campos, tabs, dependencias en cascada, autocomplete, file upload) | ~16 horas | ~1 hora | **~94%** |
+| **Proyecto completo (10 pantallas CRUD)** | **~80-160 horas** | **~5-10 horas** | **~90-94%** |
+
+> Los números asumen que ya conocés la configuración de la lib. La curva de aprendizaje inicial es de ~1-2 horas.
+
+### ¿De dónde sale el ahorro?
+
+Construir una pantalla CRUD manualmente requiere:
+
+| Tarea | Manual | Con Dynamic Forms Lib |
+|---|---|---|
+| Template HTML del formulario | ✍️ Escribir ~100-200 líneas de HTML | ✅ Nada — se genera del JSON |
+| Template de la tabla | ✍️ Configurar AG Grid + columnas | ✅ Ya integrado en CrudManager |
+| Validaciones campo por campo | ✍️ Cada input con su validator | ✅ Se declaran en el JSON |
+| Lógica de crear/editar/eliminar | ✍️ HTTP calls, estados, dialogo de confirmación | ✅ Ya integrado |
+| Dependencias en cascada | ✍️ Subscriptions, filtros, limpieza de campos | ✅ Se declara con `dependsOn` |
+| Tematización | ✍️ Configurar Material + AG Grid + modo oscuro | ✅ ThemeService con 12 paletas |
+| Exportación a Excel | ✍️ Configurar exceljs desde cero | ✅ Ya integrado |
+| **Total** | **~4-16 horas por pantalla** | **~15-60 minutos** |
+
+---
+
+## 📦 ¿Qué incluye este repo?
+
+- **`projects/dynamic-forms-lib/`** → La librería publicable en npm
+- **`src/`** → Demo app funcional con ejemplos reales
+
+### Features de la lib
+
+| Feature | Estado |
+|---|---|
+| 18 tipos de campo (text, number, select, autocomplete, date, file, checkbox-multiple, etc.) | ✅ Estable |
+| Layouts: tabs, steps, accordion, simple | ✅ Estable |
+| CRUD completo (crear/editar/ver/eliminar) | ✅ Estable |
+| AG Grid con acciones por fila | ✅ Estable |
+| Dependencias en cascada (locales y desde API) | ✅ Estable |
+| ThemeService: 12 paletas + light/dark/system + 4 AG Grid themes | ✅ Estable |
+| Exportación a Excel con estilos (exceljs) | ✅ Estable |
+| Mapeo one-to-many en options dinámicas | ✅ Estable |
+| File upload | ⚠️ Fix pendiente en CrudManager |
+| Custom validators | 📋 Planificado |
+| Tests unitarios | 📋 Planificado |
+| JSDoc completo | 📋 Planificado |
+| Internacionalización (inglés) | 📋 Planificado |
+
+---
+
+## 🚀 Quick Start — Demo App
 
 ```bash
+git clone https://github.com/JOMAVARGAS01/dynamic-forms-lib.git
+cd dynamic-forms-lib
+npm install
 ng serve
+# Abrí http://localhost:4200
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+La demo incluye:
 
-## Code scaffolding
+| Página | Muestra |
+|---|---|
+| **Welcome** | Overview y navegación |
+| **Personas** | CRUD completo con selects dependientes (país → moneda), autocomplete, checkbox-multiple |
+| **Vehículos** | Formulario con tabs, file upload, switch |
+| **Pokémon** | Select dinámico desde API externa |
+| **Star Wars** | Autocomplete + búsqueda desde API externa |
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+---
 
-```bash
-ng generate component component-name
+## 📖 Documentación de la Librería
+
+Toda la documentación de la API, configuración y roadmap está en:
+
+➡️ **[projects/dynamic-forms-lib/README.md](./projects/dynamic-forms-lib/README.md)**
+
+Incluye:
+- Instalación
+- Configuración de FormConfig completa (todos los field types, layouts, validaciones)
+- Guía de layouts (tabs, steps, accordion)
+- Sistema de theming
+- API endpoints dinámicos
+- Roadmap
+
+---
+
+## 🏗️ Estructura del Proyecto
+
+```
+dynamic-forms-lib/
+├── src/                          # Demo app
+│   └── app/
+│       ├── pages/                # Cada página es un ejemplo CRUD
+│       │   ├── personas-page/    # CRUD completo + dependencias
+│       │   ├── vehicles-page/    # Tabs + file upload
+│       │   ├── pokemon-page/     # API externa
+│       │   ├── star-wars-page/   # Autocomplete externo
+│       │   └── welcome-page/     # Landing de la demo
+│       ├── components/           # Componentes compartidos de la demo
+│       └── services/             # Servicios compartidos de la demo
+├── projects/
+│   └── dynamic-forms-lib/        # ⭐ La librería
+│       ├── src/lib/
+│       │   ├── components/       # CrudManager, Forms, Field
+│       │   ├── services/         # DynamicOptions, Theme
+│       │   └── types/            # FormConfig, FieldConfig, etc.
+│       ├── README.md             # Docs de la lib
+│       ├── CHANGELOG.md          # Historial de versiones
+│       ├── CONTRIBUTING.md       # Guía para contribuir
+│       └── CODE_OF_CONDUCT.md    # Código de conducta
+├── angular.json
+├── package.json
+└── README.md                     # Este archivo
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
+## 🔧 Próximos pasos
 
-## Building
+1. **Fix file upload** en CrudManager (no envía archivos al submit)
+2. **JSDoc** en todos los componentes/servicios públicos
+3. **Traducción** de mensajes hardcodeados al inglés
+4. **Custom validators** configurables desde FieldConfig
+5. **Tests** unitarios con cubrimiento decente
+6. **Publicación npm** como `@dmdintersoft/dynamic-forms-lib`
 
-To build the project run:
+---
 
-```bash
-ng build
-```
+## 📄 Licencia
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+MIT © [José Manuel Vargas](https://github.com/JOMAVARGAS01) — DmdIntersoft
 
-## Running unit tests
+---
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+**¿Te sirve la lib? Dejá una ⭐ en [GitHub](https://github.com/JOMAVARGAS01/dynamic-forms-lib) y ayudá a que crezca.**

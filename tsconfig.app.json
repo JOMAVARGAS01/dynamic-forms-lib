@@ -4,7 +4,11 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "types": [],
+    "paths": {
+      "@dynamic-forms-lib": ["projects/dynamic-forms-lib/src/public-api.ts"],
+      "@dynamic-forms-lib/*": ["projects/dynamic-forms-lib/src/lib/*"]
+    }
   },
   "include": [
     "src/**/*.ts"

@@ -7,3 +7,4 @@ export * from './lib/services/dynamic-options.service';
 export * from './lib/services/theme.service';
 export * from './lib/services/sidebar.service';
 export * from './lib/types/dynamic-form.types';
+export { FORM_FIELD_APPEARANCE_TOKEN, FormFieldAppearance } from './lib/types/dynamic-form.types';

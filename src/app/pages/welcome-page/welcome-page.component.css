@@ -1,0 +1,247 @@
+.welcome-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Hero Section */
+.welcome-hero {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, var(--mat-sys-primary-container) 0%, var(--mat-sys-secondary-container) 100%);
+  border-radius: 24px;
+  margin-bottom: 48px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.hero-icon {
+  margin-bottom: 24px;
+}
+
+.hero-icon mat-icon {
+  font-size: 80px;
+  width: 80px;
+  height: 80px;
+  color: var(--mat-sys-primary);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--mat-sys-on-primary-container);
+  letter-spacing: -0.5px;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--mat-sys-on-primary-container);
+  opacity: 0.9;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Instructions Section */
+.instructions-section {
+  background: var(--mat-sys-surface-variant);
+  padding: 32px;
+  border-radius: 16px;
+  margin-bottom: 48px;
+  border-left: 4px solid var(--mat-sys-primary);
+}
+
+.instructions-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 1.5rem;
+}
+
+.instructions-section h2 mat-icon {
+  color: var(--mat-sys-primary);
+}
+
+.instructions-section p {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.feature-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+}
+
+.feature-card mat-card-header {
+  padding: 24px 24px 16px 24px;
+}
+
+.feature-card mat-icon[mat-card-avatar] {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  background: transparent !important;
+}
+
+.personas-card mat-icon[mat-card-avatar] {
+  color: #2196F3;
+}
+
+.pokemon-card mat-icon[mat-card-avatar] {
+  color: #FF9800;
+}
+
+.starwars-card mat-icon[mat-card-avatar] {
+  color: #9C27B0;
+}
+
+.olympics-card mat-icon[mat-card-avatar] {
+  color: #4CAF50;
+}
+
+.feature-card mat-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.feature-card mat-card-content {
+  padding: 0 24px 16px 24px;
+}
+
+.feature-card mat-card-content p {
+  margin: 0 0 12px 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.feature-card mat-card-content ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.feature-card mat-card-content ul li {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.feature-card mat-card-actions {
+  padding: 16px 24px 24px 24px;
+}
+
+.feature-card button {
+  gap: 8px;
+}
+
+/* Tech Stack Section */
+.tech-stack-section {
+  background: var(--mat-sys-surface);
+  padding: 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.tech-stack-section h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 32px 0;
+  color: var(--mat-sys-on-surface);
+  font-size: 1.75rem;
+}
+
+.tech-stack-section h2 mat-icon {
+  color: var(--mat-sys-primary);
+}
+
+.tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+}
+
+.tech-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: var(--mat-sys-surface-variant);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.tech-item:hover {
+  background: var(--mat-sys-primary-container);
+  transform: scale(1.05);
+}
+
+.tech-item mat-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: var(--mat-sys-primary);
+}
+
+.tech-item span {
+  font-weight: 500;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .welcome-hero {
+    padding: 40px 16px;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tech-stack-section {
+    padding: 24px 16px;
+  }
+
+  .tech-stack {
+    gap: 12px;
+  }
+
+  .tech-item {
+    min-width: 120px;
+    padding: 12px 16px;
+  }
+}

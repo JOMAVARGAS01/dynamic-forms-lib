@@ -1,4 +1,5 @@
 import { ValidatorFn } from '@angular/forms';
+import { InjectionToken } from '@angular/core';
 
 export type ControlType =
   | 'text'
@@ -101,4 +102,10 @@ export interface FormConfig {
   };
 }
 
-export const FORM_FIELD_APPEARANCE: 'fill' | 'outline' = 'fill';
+export type FormFieldAppearance = 'fill' | 'outline';
+export const FORM_FIELD_APPEARANCE: FormFieldAppearance = 'fill';
+
+export const FORM_FIELD_APPEARANCE_TOKEN = new InjectionToken<FormFieldAppearance>(
+  'Form field appearance',
+  { factory: () => FORM_FIELD_APPEARANCE, providedIn: 'root' }
+);

@@ -37,7 +37,7 @@
 
 <div class="custom-modal-overlay" *ngIf="isFormOpen()">
   <div class="custom-modal-content">
-    <app-forms [config]="formConfig" [mode]="formMode()" [initialData]="initialData()"
+    <app-forms [config]="formConfig" [mode]="formMode()" [initialData]="initialData()" [appearance]="defaultAppearance"
       (formSubmit)="handleSubmit($event)" (cancel)="handleCancel()">
     </app-forms>
   </div>

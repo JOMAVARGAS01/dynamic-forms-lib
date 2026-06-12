@@ -1,0 +1,129 @@
+/* Fixed AppBar at the top */
+.app-toolbar {
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 64px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    background-color: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+}
+
+/* Container below AppBar */
+.layout-container {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* Sidenav container fills the layout container */
+.sidenav-container {
+    height: 100%;
+}
+
+/* Fixed Sidebar */
+.sidenav {
+    width: 280px;
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+/* Settings Sidebar */
+.settings-sidenav {
+    width: 300px;
+    padding: 0;
+}
+
+/* Sidebar content with scroll */
+.sidenav-content {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Sidebar header */
+.sidenav-header {
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    padding: 24px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+/* Menu items */
+.sidenav ::ng-deep .mat-mdc-list-item {
+    margin: 8px 12px;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 56px;
+}
+
+.sidenav ::ng-deep .mat-mdc-list-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidenav ::ng-deep .mat-mdc-list-item .mat-icon {
+    margin-right: 16px;
+}
+
+.sidenav ::ng-deep .mat-mdc-list-item-title {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Active link styling */
+.active-link {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-left: 4px solid var(--mat-sys-primary);
+    font-weight: 600;
+}
+
+/* Main content area with independent scroll */
+.main-content {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Content wrapper with padding */
+.content-wrapper {
+    padding: 20px;
+    min-height: 100%;
+}
+
+/* Floating Settings Button */
+.settings-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 50%;
+    /* Center vertically */
+    transform: translateY(50%);
+    z-index: 1000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 599px) {
+    .app-toolbar {
+        height: 56px;
+    }
+
+    .layout-container {
+        top: 56px;
+    }
+
+    .content-wrapper {
+        padding: 16px;
+    }
+
+    .settings-fab {
+        right: 16px;
+    }
+}

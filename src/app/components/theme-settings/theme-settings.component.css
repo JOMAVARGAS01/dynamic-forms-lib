@@ -1,0 +1,74 @@
+.settings-container {
+    padding: 16px;
+    width: 280px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    h3 {
+        margin: 0;
+        font-weight: 500;
+    }
+}
+
+.section {
+    margin-bottom: 24px;
+
+    label {
+        display: block;
+        margin-bottom: 12px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface-variant);
+    }
+}
+
+mat-button-toggle-group {
+    width: 100%;
+
+    mat-button-toggle {
+        width: 33.33%;
+    }
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.palette-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: white;
+
+    &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    &.active {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 2px var(--mat-sys-on-surface), 0 0 0 4px var(--mat-sys-surface);
+    }
+
+    mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+mat-form-field {
+    width: 100%;
+}

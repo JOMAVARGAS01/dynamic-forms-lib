@@ -1,0 +1,146 @@
+<div class="welcome-container">
+  <div class="welcome-hero">
+    <div class="hero-icon">
+      <mat-icon>rocket_launch</mat-icon>
+    </div>
+    <h1 class="hero-title">Bienvenido a Dynamic Forms App</h1>
+    <p class="hero-subtitle">
+      Sistema de gestión CRUD con formularios dinámicos y configurables
+    </p>
+  </div>
+
+  <div class="instructions-section">
+    <h2>
+      <mat-icon>info_outline</mat-icon>
+      Cómo comenzar
+    </h2>
+    <p>Selecciona una opción del menú lateral para acceder a las diferentes secciones de la aplicación.</p>
+  </div>
+
+  <div class="features-grid">
+    <mat-card class="feature-card personas-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>people</mat-icon>
+        <mat-card-title>Personas</mat-card-title>
+        <mat-card-subtitle>Gestión de personas</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Administra registros de personas con formularios dinámicos que incluyen:</p>
+        <ul>
+          <li>Datos personales completos</li>
+          <li>Selección de países desde API externa</li>
+          <li>Campos condicionales y validaciones</li>
+          <li>Carga de archivos (CV)</li>
+        </ul>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" routerLink="/personas">
+          <mat-icon>arrow_forward</mat-icon>
+          Ir a Personas
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="feature-card pokemon-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>catching_pokemon</mat-icon>
+        <mat-card-title>Pokemon</mat-card-title>
+        <mat-card-subtitle>API de Pokemon</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Explora el catálogo de Pokemon con:</p>
+        <ul>
+          <li>Datos desde PokeAPI</li>
+          <li>Búsqueda y filtrado avanzado</li>
+          <li>Exportación a Excel</li>
+          <li>Interfaz responsiva</li>
+        </ul>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" routerLink="/pokemon">
+          <mat-icon>arrow_forward</mat-icon>
+          Ir a Pokemon
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="feature-card starwars-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>rocket_launch</mat-icon>
+        <mat-card-title>Star Wars</mat-card-title>
+        <mat-card-subtitle>Personajes de Star Wars</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Gestiona personajes del universo Star Wars:</p>
+        <ul>
+          <li>Datos desde SWAPI</li>
+          <li>Información detallada de personajes</li>
+          <li>Grid interactivo con AG-Grid</li>
+          <li>Operaciones CRUD completas</li>
+        </ul>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" routerLink="/star-wars">
+          <mat-icon>arrow_forward</mat-icon>
+          Ir a Star Wars
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="feature-card olympics-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>emoji_events</mat-icon>
+        <mat-card-title>Olympics</mat-card-title>
+        <mat-card-subtitle>Medallero Olímpico</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Consulta medalleros olímpicos por año:</p>
+        <ul>
+          <li>Filtrado por año de olimpiada</li>
+          <li>Estadísticas de medallas por país</li>
+          <li>API local con JSON Server</li>
+          <li>Visualización en tabla dinámica</li>
+        </ul>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" routerLink="/olympics">
+          <mat-icon>arrow_forward</mat-icon>
+          Ir a Olympics
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="tech-stack-section">
+    <h2>
+      <mat-icon>developer_mode</mat-icon>
+      Tecnologías Utilizadas
+    </h2>
+    <div class="tech-stack">
+      <div class="tech-item">
+        <mat-icon>code</mat-icon>
+        <span>Angular 20</span>
+      </div>
+      <div class="tech-item">
+        <mat-icon>palette</mat-icon>
+        <span>Material UI 20</span>
+      </div>
+      <div class="tech-item">
+        <mat-icon>grid_on</mat-icon>
+        <span>AG-Grid Community</span>
+      </div>
+      <div class="tech-item">
+        <mat-icon>bolt</mat-icon>
+        <span>Signals & OnPush</span>
+      </div>
+      <div class="tech-item">
+        <mat-icon>api</mat-icon>
+        <span>REST APIs</span>
+      </div>
+      <div class="tech-item">
+        <mat-icon>description</mat-icon>
+        <span>Dynamic Forms</span>
+      </div>
+    </div>
+  </div>
+</div>

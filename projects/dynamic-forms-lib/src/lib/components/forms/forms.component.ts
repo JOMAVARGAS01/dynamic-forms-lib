@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { FormConfig, FieldConfig, FORM_FIELD_APPEARANCE } from '../../types/dynamic-form.types';
+import { FormConfig, FieldConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN } from '../../types/dynamic-form.types';
 import { FieldComponent } from '../field/field.component';
 
 @Component({
@@ -27,7 +27,8 @@ export class FormsComponent implements OnInit {
   @Input({ required: true }) config!: FormConfig;
   @Input() mode: 'add' | 'edit' = 'add';
   @Input() initialData: Record<string, any> | null = null;
-  @Input() appearance: typeof FORM_FIELD_APPEARANCE = FORM_FIELD_APPEARANCE;
+  private defaultAppearance = inject(FORM_FIELD_APPEARANCE_TOKEN);
+  @Input() appearance: FormFieldAppearance = this.defaultAppearance;
 
   @Output() formSubmit = new EventEmitter<FormData>();
   @Output() cancel = new EventEmitter<void>();

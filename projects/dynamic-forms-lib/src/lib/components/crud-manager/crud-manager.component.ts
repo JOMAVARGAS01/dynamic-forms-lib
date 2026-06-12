@@ -17,7 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { FormsComponent } from '../forms/forms.component';
-import { FormConfig } from '../../types/dynamic-form.types';
+import { FormConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN } from '../../types/dynamic-form.types';
 import { ActionCellRendererComponent } from '../action-cell/action-cell.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { HttpClient } from '@angular/common/http';
@@ -68,6 +68,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   private http = inject(HttpClient);
   private sidebarService = inject(SidebarService);
   protected themeService = inject(ThemeService);
+  protected defaultAppearance = inject(FORM_FIELD_APPEARANCE_TOKEN);
   private cdr = inject(ChangeDetectorRef);
 
   agGridTheme = signal('ag-theme-material');

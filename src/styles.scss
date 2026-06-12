@@ -1,1 +1,113 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@use 'sass:map';
+
+// Define all palettes
+$palettes: (
+  red-palette: mat.$red-palette,
+  green-palette: mat.$green-palette,
+  blue-palette: mat.$blue-palette,
+  yellow-palette: mat.$yellow-palette,
+  cyan-palette: mat.$cyan-palette,
+  magenta-palette: mat.$magenta-palette,
+  orange-palette: mat.$orange-palette,
+  chartreuse-palette: mat.$chartreuse-palette,
+  spring-green-palette: mat.$spring-green-palette,
+  azure-palette: mat.$azure-palette,
+  violet-palette: mat.$violet-palette,
+  rose-palette: mat.$rose-palette
+);
+
+@mixin apply-theme($palette, $is-dark) {
+  $primary: $palette;
+  $secondary: $palette;
+  $accent: $palette;
+
+  $theme-type: if($is-dark, dark, light);
+
+  $theme: mat.define-theme((color: (theme-type: $theme-type,
+          primary: $primary,
+          tertiary: $secondary,
+        ),
+        typography: (plain-family: Roboto,
+        ),
+        density: (scale: 0)));
+
+  @include mat.all-component-themes($theme);
+  @include mat.core-theme($theme);
+
+  // Explicitly define CSS variables for the primary color
+  @if $is-dark {
+    --mat-sys-primary: #{map.get($primary, 80)};
+    --mat-sys-on-primary: #{map.get($primary, 20)};
+    --mat-sys-primary-container: #{map.get($primary, 30)};
+    --mat-sys-on-primary-container: #{map.get($primary, 90)};
+
+    // Surface colors for dark mode
+    --mat-sys-surface: #1c1b1f;
+    --mat-sys-on-surface: #e6e1e5;
+    --mat-sys-surface-container-low: #27272a;
+  }
+
+  @else {
+    --mat-sys-primary: #{map.get($primary, 40)};
+    --mat-sys-on-primary: #{map.get($primary, 100)};
+    --mat-sys-primary-container: #{map.get($primary, 90)};
+    --mat-sys-on-primary-container: #{map.get($primary, 10)};
+
+    // Surface colors for light mode
+    --mat-sys-surface: #fffbfe;
+    --mat-sys-on-surface: #1c1b1f;
+    --mat-sys-surface-container-low: #f7f2fa;
+  }
+
+  // Apply background and text colors based on theme type
+  @if $is-dark {
+    background-color: #1c1b1f;
+    color: #e6e1e5;
+  }
+
+  @else {
+    background-color: #fffbfe;
+    color: #1c1b1f;
+  }
+}
+
+// Base styles
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Generate classes for each palette
+@each $name, $palette in $palettes {
+
+  // Light theme (default or explicit)
+  body.#{$name}.light-theme {
+    @include apply-theme($palette, false);
+  }
+
+  // Dark theme
+  body.#{$name}.dark-theme {
+    @include apply-theme($palette, true);
+  }
+}
+
+// Default fallback (e.g. if no class is present yet)
+html {
+  @include mat.theme((color: (primary: mat.$azure-palette,
+        tertiary: mat.$azure-palette,
+      ),
+      typography: Roboto,
+      density: 0));
+}
+
+@import "ag-grid-community/styles/ag-theme-material.css";
+@import "ag-grid-community/styles/ag-theme-alpine.css";
+@import "ag-grid-community/styles/ag-theme-balham.css";
+@import "ag-grid-community/styles/ag-theme-quartz.css";
