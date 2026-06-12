@@ -29,12 +29,17 @@ export const AVAILABLE_AG_GRID_THEMES = [
 @Injectable({
     providedIn: 'root'
 })
+/** Root service managing visual theme: light/dark/system mode, color palette, and AG-Grid theme. Persists settings to localStorage. */
 export class ThemeService {
     private platformId = inject(PLATFORM_ID);
 
+    /** Current theme mode: 'light', 'dark', or 'system' (follows OS preference). */
     themeMode = signal<ThemeMode>('system');
+    /** Active color palette CSS class name. */
     activePalette = signal<string>('azure-palette');
+    /** Whether dark mode is currently active (resolved from mode + system preference). */
     isDarkMode = signal<boolean>(false);
+    /** Active AG-Grid visual theme variant (alpine, material, balham, quartz). */
     agGridTheme = signal<AgGridTheme>('material');
 
     constructor() {
@@ -79,14 +84,17 @@ export class ThemeService {
         }
     }
 
+    /** Sets the theme mode and applies it immediately. */
     setMode(mode: ThemeMode) {
         this.themeMode.set(mode);
     }
 
+    /** Sets the active color palette and applies it immediately. */
     setPalette(palette: string) {
         this.activePalette.set(palette);
     }
 
+    /** Sets the AG-Grid visual theme and persists it. */
     setAgGridTheme(theme: AgGridTheme) {
         this.agGridTheme.set(theme);
     }

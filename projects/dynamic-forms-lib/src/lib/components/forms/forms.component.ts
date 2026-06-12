@@ -23,16 +23,30 @@ import { FieldComponent } from '../field/field.component';
   styleUrls: ['./forms.component.css'],
   templateUrl: './forms.component.html'
 })
+/**
+ * Dynamic form renderer that builds a reactive FormGroup from a FormConfig.
+ * Supports field types (text, select, autocomplete, checkbox, date, file, etc.),
+ * validation, conditional visibility (visibleIf), and file attachments.
+ */
 export class FormsComponent implements OnInit {
+  /** Form configuration defining groups, fields, and layout. */
   @Input({ required: true }) config!: FormConfig;
+  /** Form mode: 'add' for new records, 'edit' for existing ones. */
   @Input() mode: 'add' | 'edit' = 'add';
+  /** Initial data to patch into the form when in edit mode. */
   @Input() initialData: Record<string, any> | null = null;
   private defaultAppearance = inject(FORM_FIELD_APPEARANCE_TOKEN);
+
+  /** Material appearance style for form fields (outline, fill, legacy, standard). */
   @Input() appearance: FormFieldAppearance = this.defaultAppearance;
 
+  /** Emits the collected FormData when the form is submitted. */
   @Output() formSubmit = new EventEmitter<FormData>();
+  /** Emits when the user cancels the form. */
   @Output() cancel = new EventEmitter<void>();
+  /** Whether all form groups are currently expanded in the template. */
   public allExpanded: boolean = true;
+  /** Initial expansion state applied after the view initializes. */
   public initialExpansionState: boolean = false;
 
   fb = inject(FormBuilder);
@@ -195,10 +209,12 @@ export class FormsComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  /** Checks if a given field is currently visible based on its visibleIf rules. */
   isVisible(field: FieldConfig): boolean {
     return this.visibilityMap()[field.name] ?? true;
   }
 
+  /** Registers a file selected by a file input field. */
   onFileChange(event: { name: string; file: File }) {
     this.files.set(event.name, event.file);
   }
@@ -211,6 +227,7 @@ export class FormsComponent implements OnInit {
     });
   }
 
+  /** Validates and submits the form. Only validates enabled (visible) controls. */
   onSubmit() {
     // Only validate enabled controls (visible fields)
     if (this.isFormInvalid) {
@@ -254,6 +271,7 @@ export class FormsComponent implements OnInit {
     this.formSubmit.emit(formData);
   }
 
+  /** Checks if all visible fields in a given group are valid. */
   isGroupValid(group: any): boolean {
     // Check if any visible field in the group is invalid
     return !group.fields.some((field: any) => {

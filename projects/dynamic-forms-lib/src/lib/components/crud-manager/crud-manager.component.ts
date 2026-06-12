@@ -48,20 +48,37 @@ ModuleRegistry.registerModules([AllCommunityModule, CsvExportModule]);
   styleUrls: ['./crud-manager.component.css'],
   templateUrl: './crud-manager.component.html',
 })
+/**
+ * Generic CRUD manager wrapping AG-Grid with a dynamic form sidebar.
+ * Handles list display, Excel export, create/edit via sidebar, delete with confirmation, and quick-filter search.
+ */
 export class CrudManagerComponent implements OnInit, OnChanges {
+  /** Dynamic form configuration used in the create/edit sidebar. */
   @Input({ required: true }) formConfig!: FormConfig;
+  /** AG-Grid column definitions for the data table. */
   @Input({ required: true }) columnDefs: ColDef[] = [];
+  /** Title displayed in the header and Excel export filename. */
   @Input() title: string = 'Mantenimiento';
+  /** API endpoint URL for fetching the list data. */
   @Input({ required: true }) apiUrl!: string;
+  /** Optional custom URL for creating records. Falls back to apiUrl. */
   @Input() createUrl?: string;
+  /** Optional custom URL or function returning the URL for updating records. Falls back to apiUrl/{id}. */
   @Input() updateUrl?: string | ((data: any) => string);
+  /** Optional function returning the delete URL for a given record. Falls back to apiUrl/{id}. */
   @Input() deleteUrl?: (data: any) => string;
+  /** Transforms the raw API response into the row data array. */
   @Input() responseMapper: (response: any) => any[] = (res) => res;
+  /** Whether to show the Edit/Delete action column. */
   @Input() showActions: boolean = true;
 
+  /** Reactive signal holding the current row data displayed in the grid. */
   rowData = signal<any[]>([]);
+  /** Whether the form sidebar is currently open. */
   isFormOpen = signal<boolean>(false);
+  /** Current form mode: 'add' for new records, 'edit' for existing ones. */
   formMode = signal<'add' | 'edit'>('add');
+  /** Initial data payload when editing a record. null for new records. */
   initialData = signal<any | null>(null);
 
   private gridApi!: GridApi;
@@ -71,6 +88,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   protected defaultAppearance = inject(FORM_FIELD_APPEARANCE_TOKEN);
   private cdr = inject(ChangeDetectorRef);
 
+  /** Active AG-Grid CSS theme class, toggled between light and dark variants. */
   agGridTheme = signal('ag-theme-material');
 
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar) {
@@ -149,21 +167,25 @@ export class CrudManagerComponent implements OnInit, OnChanges {
       });
   }
 
+  /** Applies a quick-filter to the AG-Grid based on user input. */
   onQuickFilter(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.gridApi.setGridOption('quickFilterText', value);
   }
 
+  /** Clears the quick-filter search input and resets the grid filter. */
   clearSearch(inputElement: HTMLInputElement) {
     inputElement.value = '';
     this.gridApi.setGridOption('quickFilterText', '');
   }
 
+  /** Stores the grid API reference and auto-sizes columns to fit. */
   onGridReady(params: any) {
     this.gridApi = params.api;
     this.gridApi.sizeColumnsToFit();
   }
 
+  /** Exports the visible grid data (excluding actions column) to an Excel file. */
   onExport() {
     const visibleColumns = this.gridApi.getAllDisplayedColumns()
       .filter(col => col.getColDef().headerName !== 'Acciones');
@@ -226,6 +248,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     });
   }
 
+  /** Opens the sidebar in 'add' mode for creating a new record. */
   onAdd() {
     this.sidebarService.closeSidebar();
     this.formMode.set('add');
@@ -233,6 +256,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     this.isFormOpen.set(true);
   }
 
+  /** Opens the sidebar in 'edit' mode pre-filled with the given record data. */
   onEdit(data: any) {
     this.sidebarService.closeSidebar();
     this.formMode.set('edit');
@@ -240,6 +264,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     this.isFormOpen.set(true);
   }
 
+  /** Deletes a record after confirmation. Uses deleteUrl function or falls back to apiUrl/{id}. */
   onDelete(data: any) {
     if (!data) {
       this.snackBar.open('⚠️ Error: No se encontraron datos para eliminar.', 'Cerrar', { duration: 3000 });
@@ -271,6 +296,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     });
   }
 
+  /** Handles form submission from the sidebar. Sends POST (add) or PUT (edit) to the API. */
   handleSubmit(formData: FormData) {
     // Detect if FormData contains files
     let hasFiles = false;
@@ -349,6 +375,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     }
   }
 
+  /** Closes the form sidebar and reopens the list sidebar. */
   handleCancel() {
     this.isFormOpen.set(false);
     this.sidebarService.setSidebarOpen(true);

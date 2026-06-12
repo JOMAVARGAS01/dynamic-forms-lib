@@ -35,17 +35,29 @@ type Option = { label: string, value: any };
   styleUrls: ['./field.component.css'],
   templateUrl: './field.component.html'
 })
+/**
+ * Single field renderer for dynamic forms.
+ * Renders one form field based on a FieldConfig type (text, select, autocomplete,
+ * checkbox, switch, radio, date, file, etc.) with dynamic API-loaded options and cascading support.
+ */
 export class FieldComponent implements OnInit {
+  /** Configuration for this field (type, name, validations, options, etc.). */
   @Input({ required: true }) field!: FieldConfig;
+  /** Material appearance style for the form field (outline, fill, legacy, standard). */
   @Input({ required: true }) appearance: typeof FORM_FIELD_APPEARANCE = FORM_FIELD_APPEARANCE;
+  /** The parent FormGroup this field is bound to. */
   @Input({ required: true }) form!: FormGroup;
 
+  /** Emits when a file is selected, containing the field name and File object. */
   @Output() fileChange = new EventEmitter<{ name: string; file: File }>();
 
   private optionsService = inject(DynamicOptionsService);
 
+  /** Options loaded from a dynamic API source for select/autocomplete fields. */
   apiOptions = signal<Option[]>([]);
+  /** Whether dynamic options are currently being fetched. */
   isLoadingOptions = signal<boolean>(false);
+  /** Displayed filename for file input fields. */
   fileName = signal<string>('');
 
   filteredOptions = signal<Option[]>([]);
@@ -186,6 +198,7 @@ export class FieldComponent implements OnInit {
     this.filteredOptions.set(newFilteredOptions);
   }
 
+  /** Returns the display label for a given option value. */
   displayOption = (value: any): string => {
     if (value === null || value === undefined || typeof value === 'object') return '';
     const valueString = String(value);
@@ -196,11 +209,13 @@ export class FieldComponent implements OnInit {
     return valueString;
   };
 
+  /** Returns the static options array from the field configuration (select, autocomplete, radio, checkbox-multiple). */
   getStaticOptions(): Option[] {
     // Support options for select, autocomplete, radio, and checkbox-multiple
     return (this.field as any).options || [];
   }
 
+  /** Handles file selection from an input element and emits the fileChange event. */
   handleFile(event: any) {
     const file = event.target.files?.[0];
     if (file) {
@@ -211,11 +226,13 @@ export class FieldComponent implements OnInit {
     }
   }
 
+  /** Whether the field control has validation errors and has been touched/dirty. */
   hasError(): boolean {
     const control = this.form.get(this.field.name);
     return !!(control && control.invalid && (control.touched || control.dirty));
   }
 
+  /** Returns a user-friendly validation error message for the current field control. */
   getErrorMessage(): string {
     const control = this.form.get(this.field.name);
     if (!control || !control.errors) return '';
@@ -231,6 +248,7 @@ export class FieldComponent implements OnInit {
     return 'Dato inválido.';
   }
 
+  /** Toggles a value in a checkbox-multiple field's array of selected values. */
   onToggleCheckboxMultiple(fieldName: string, value: any, checked: boolean) {
     const control = this.form.get(fieldName);
     if (!control) return;
@@ -249,6 +267,7 @@ export class FieldComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  /** Marks a radio button control as touched and dirty for validation display. */
   markRadioAsTouched(fieldName: string) {
     const control = this.form.get(fieldName);
     if (!control) return;
@@ -258,6 +277,7 @@ export class FieldComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  /** Marks the switch control as touched/dirty when toggled. */
   onSwitchChange(event: MatSlideToggleChange) {
     const control = this.form.get(this.field.name);
     if (control) {
@@ -267,11 +287,13 @@ export class FieldComponent implements OnInit {
     }
   }
 
+  /** Toggles password visibility between plain text and masked. */
   togglePasswordVisibility(event: MouseEvent) {
     event.stopPropagation();
     this.hidePassword.update(value => !value);
   }
 
+  /** Whether the given field type should render as a standard HTML input (text, email, password, etc.). */
   isSimpleInput(type: string): boolean {
     return ['text', 'email', 'password', 'tel', 'url', 'number', 'color', 'time', 'week', 'month', 'textarea'].includes(type);
   }

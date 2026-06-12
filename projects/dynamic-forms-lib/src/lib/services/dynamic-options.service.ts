@@ -6,9 +6,16 @@ import { ApiConfig } from '../types/dynamic-form.types';
 type Option = { label: string, value: any };
 
 @Injectable({ providedIn: 'root' })
+/** Root service for fetching dynamic select/autocomplete options from API endpoints. Supports dependent/cascading fields and configurable value/label key mapping. */
 export class DynamicOptionsService {
   private http = inject(HttpClient);
 
+  /**
+   * Fetches options from an API endpoint based on the provided configuration.
+   * @param config - API configuration including endpoint, valueKey, labelKey, and optional dependency.
+   * @param dependentValue - Optional value of a dependent field to include as a query parameter.
+   * @returns Observable emitting the mapped and sorted options array.
+   */
   fetchOptions(config: ApiConfig, dependentValue?: any): Observable<Option[]> {
     let params = new HttpParams();
     

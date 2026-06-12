@@ -51,10 +51,10 @@ Construir una pantalla CRUD manualmente requiere:
 | ThemeService: 12 paletas + light/dark/system + 4 AG Grid themes | ✅ Estable |
 | Exportación a Excel con estilos (exceljs) | ✅ Estable |
 | Mapeo one-to-many en options dinámicas | ✅ Estable |
-| File upload | ⚠️ Fix pendiente en CrudManager |
+| File upload (multipart + JSON condicional) | ✅ Estable |
+| JSDoc completo en API pública | ✅ Estable |
 | Custom validators | 📋 Planificado |
 | Tests unitarios | 📋 Planificado |
-| JSDoc completo | 📋 Planificado |
 | Internacionalización (inglés) | 📋 Planificado |
 
 ---
@@ -130,12 +130,10 @@ dynamic-forms-lib/
 
 ## 🔧 Próximos pasos
 
-1. **Fix file upload** en CrudManager (no envía archivos al submit)
-2. **JSDoc** en todos los componentes/servicios públicos
-3. **Traducción** de mensajes hardcodeados al inglés
-4. **Custom validators** configurables desde FieldConfig
-5. **Tests** unitarios con cubrimiento decente
-6. **Publicación npm** como `@dmdintersoft/dynamic-forms-lib`
+1. **Traducción** de mensajes hardcodeados al inglés
+2. **Custom validators** configurables desde FieldConfig
+3. **Tests** unitarios con cubrimiento decente
+4. **Publicación npm** como `@dmdintersoft/dynamic-forms-lib`
 
 ---
 

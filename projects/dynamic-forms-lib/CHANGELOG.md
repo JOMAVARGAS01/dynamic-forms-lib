@@ -2,6 +2,14 @@
 
 All notable changes to @dynamic-forms-lib/core will be documented in this file.
 
+## [0.1.1] - 2026-06-12
+
+### Fixed
+- **File upload**: CrudManagerComponent.handleSubmit now sends FormData (multipart) when files are present, instead of silently discarding them. Falls back to JSON when no files exist.
+
+### Added
+- **JSDoc**: Complete documentation on all public APIs (components, services, types)
+
 ## [0.1.0] - 2025-12-11
 
 ### Added

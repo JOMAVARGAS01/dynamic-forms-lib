@@ -11,7 +11,9 @@ import { MatButtonModule } from '@angular/material/button';
     templateUrl: './confirmation-dialog.component.html',
     styleUrls: ['./confirmation-dialog.component.css']
 })
+/** Simple Material Dialog confirmation component. Displays a message with Confirm/Cancel buttons. */
 export class ConfirmationDialogComponent {
+    /** Dialog input data containing the confirmation message to display. */
     public data!: { message: string };
 
     constructor() {
