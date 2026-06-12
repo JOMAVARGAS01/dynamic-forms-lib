@@ -16,10 +16,10 @@
         }
       </div>
       <div class="step-actions mt-4">
-        <button mat-button matStepperPrevious type="button">Volver</button>
-        <button mat-button matStepperNext type="button">Siguiente</button>
+        <button mat-button matStepperPrevious type="button">{{ t().form.back }}</button>
+        <button mat-button matStepperNext type="button">{{ t().form.next }}</button>
         @if (entry.isLast) {
-        <button mat-button type="submit">Guardar Cambios</button>
+        <button mat-button type="submit">{{ t().form.save }}</button>
         }
       </div>
     </mat-step>
@@ -91,8 +91,8 @@
   }
 
   <div class="actions">
-    <button matButton="outlined" type="button" (click)="cancel.emit()">Cancelar</button>
-    <button matButton="filled" type="submit" [disabled]="isFormInvalid">Guardar Cambios</button>
+    <button matButton="outlined" type="button" (click)="cancel.emit()">{{ t().form.cancel }}</button>
+    <button matButton="filled" type="submit" [disabled]="isFormInvalid">{{ t().form.save }}</button>
   </div>
 
 </form>

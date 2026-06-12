@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef, Optional, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormConfig, FieldConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN } from '../../types/dynamic-form.types';
 import { FieldComponent } from '../field/field.component';
+import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 
 @Component({
   selector: 'app-forms',
@@ -57,6 +58,9 @@ export class FormsComponent implements OnInit {
   files = new Map<string, File>();
   visibilityMap = signal<Record<string, boolean>>({});
   private cdr = inject(ChangeDetectorRef);
+
+  private _translations = inject(DYNAMIC_FORMS_TRANSLATIONS, { optional: true });
+  t = computed(() => this._translations?.() ?? DEFAULT_TRANSLATIONS);
 
   ngOnInit() {
     this.buildForm();
@@ -242,8 +246,8 @@ export class FormsComponent implements OnInit {
         }
       });
 
-      console.warn('Formulario inválido. Por favor, revise los campos marcados.');
-      console.warn('Campos inválidos:', invalidFields);
+      console.warn(this.t().form.invalidForm);
+      console.warn(this.t().form.invalidFields, invalidFields);
       return;
     }
 

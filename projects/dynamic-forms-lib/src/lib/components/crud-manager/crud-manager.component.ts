@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, Input, OnChanges, SimpleChanges, computed, effect, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal, inject, Input, OnChanges, SimpleChanges, computed, effect, ChangeDetectionStrategy, ChangeDetectorRef, Optional, Signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
@@ -25,6 +25,7 @@ import * as ExcelJS from 'exceljs';
 import { SidebarService } from '../../services/sidebar.service';
 import { ThemeService } from '../../services/theme.service';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 
 ModuleRegistry.registerModules([AllCommunityModule, CsvExportModule]);
 
@@ -56,7 +57,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   /** Dynamic form configuration used in the create/edit sidebar. */
   @Input({ required: true }) formConfig!: FormConfig;
   /** AG-Grid column definitions for the data table. */
-  @Input({ required: true }) columnDefs: ColDef[] = [];
+  columnDefs = input.required<ColDef[]>();
   /** Title displayed in the header and Excel export filename. */
   @Input() title: string = 'Mantenimiento';
   /** API endpoint URL for fetching the list data. */
@@ -70,7 +71,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   /** Transforms the raw API response into the row data array. */
   @Input() responseMapper: (response: any) => any[] = (res) => res;
   /** Whether to show the Edit/Delete action column. */
-  @Input() showActions: boolean = true;
+  showActions = input<boolean>(true);
 
   /** Reactive signal holding the current row data displayed in the grid. */
   rowData = signal<any[]>([]);
@@ -87,6 +88,9 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   protected themeService = inject(ThemeService);
   protected defaultAppearance = inject(FORM_FIELD_APPEARANCE_TOKEN);
   private cdr = inject(ChangeDetectorRef);
+
+  private _translations = inject(DYNAMIC_FORMS_TRANSLATIONS, { optional: true });
+  t = computed(() => this._translations?.() ?? DEFAULT_TRANSLATIONS);
 
   /** Active AG-Grid CSS theme class, toggled between light and dark variants. */
   agGridTheme = signal('ag-theme-material');
@@ -117,28 +121,17 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     floatingFilter: false,
   };
 
-  gridColumnDefs: ColDef[] = [];
-
-  ngOnInit(): void {
-    this.setupColumns();
-    this.loadData();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['apiUrl'] && !changes['apiUrl'].firstChange) {
-      this.loadData();
-    }
-    if (changes['columnDefs'] || changes['showActions']) {
-      this.setupColumns();
-    }
-  }
-
-  private setupColumns() {
-    this.gridColumnDefs = [...this.columnDefs];
-
-    if (this.showActions) {
-      this.gridColumnDefs.push({
-        headerName: 'Acciones',
+  /**
+   * Computed AG-Grid column definitions. Re-derives the array whenever
+   * the input columns, the showActions flag, or the translations change.
+   * The template binding `[columnDefs]="gridColumnDefs()"` automatically
+   * reflects the new array.
+   */
+  gridColumnDefs = computed<ColDef[]>(() => {
+    const cols = [...this.columnDefs()];
+    if (this.showActions()) {
+      cols.push({
+        headerName: this.t().crud.actions,
         width: 120,
         cellRenderer: ActionCellRendererComponent,
         filter: false,
@@ -146,6 +139,17 @@ export class CrudManagerComponent implements OnInit, OnChanges {
         resizable: false,
         pinned: 'left',
       });
+    }
+    return cols;
+  });
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['apiUrl'] && !changes['apiUrl'].firstChange) {
+      this.loadData();
     }
   }
 
@@ -186,9 +190,21 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   }
 
   /** Exports the visible grid data (excluding actions column) to an Excel file. */
-  onExport() {
+  async onExport(): Promise<void> {
+    const { blob, filename } = await this.buildExcelExport();
+    this.downloadFile(blob, filename);
+  }
+
+  /**
+   * Builds the Excel workbook from the current grid data and returns
+   * a blob + filename ready for download. Pulls visible columns from
+   * the grid, writes a title row, a date row, the header row, and
+   * one row per filtered node.
+   */
+  private async buildExcelExport(): Promise<{ blob: Blob; filename: string }> {
+    const actionsHeader = this.t().crud.actions;
     const visibleColumns = this.gridApi.getAllDisplayedColumns()
-      .filter(col => col.getColDef().headerName !== 'Acciones');
+      .filter(col => col.getColDef().headerName !== actionsHeader);
 
     const headers = visibleColumns.map(col => col.getColDef().headerName || col.getColDef().field);
     const fields = visibleColumns.map(col => col.getColDef().field || null);
@@ -196,24 +212,23 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Datos');
 
-    // Title (merged across columns)
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0];
 
+    // Title row (merged across all columns)
     ws.mergeCells(1, 1, 1, Math.max(1, headers.length));
     const titleCell = ws.getCell(1, 1);
     titleCell.value = this.title;
     titleCell.font = { size: 20, bold: true };
 
+    // Date row
     const dateCell = ws.getCell(2, 1);
     dateCell.value = `Fecha: ${formattedDate}`;
     dateCell.font = { bold: true };
 
-    // Headers start at row 4
+    // Header row at index 4 (rows 1-3 are reserved for title + date)
     const headerRowIndex = 4;
     ws.getRow(headerRowIndex).values = headers;
-
-    // Style header row
     const headerRow = ws.getRow(headerRowIndex);
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -221,10 +236,10 @@ export class CrudManagerComponent implements OnInit, OnChanges {
       cell.alignment = { horizontal: 'center' };
     });
 
-    // Columns width (do NOT set `header` property — that can overwrite existing rows)
+    // Column widths
     ws.columns = headers.map(h => ({ width: Math.min((String(h || '').length || 10) + 5, 50) }));
 
-    // Data rows
+    // Data rows (respects current filter)
     this.gridApi.forEachNodeAfterFilter((node) => {
       if (node.data) {
         const row = fields.map(field => (field ? node.data[field] ?? '' : ''));
@@ -235,17 +250,24 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     const filenameDate = formattedDate.replace(/-/g, '');
     const filename = `${this.title} ${filenameDate}.xlsx`;
 
-    wb.xlsx.writeBuffer().then((buffer: ArrayBuffer) => {
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    });
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    return { blob, filename };
+  }
+
+  /**
+   * Triggers a browser download for the given blob with the specified filename.
+   * Cleans up the temporary object URL after the click event fires.
+   */
+  private downloadFile(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   /** Opens the sidebar in 'add' mode for creating a new record. */
@@ -267,7 +289,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   /** Deletes a record after confirmation. Uses deleteUrl function or falls back to apiUrl/{id}. */
   onDelete(data: any) {
     if (!data) {
-      this.snackBar.open('⚠️ Error: No se encontraron datos para eliminar.', 'Cerrar', { duration: 3000 });
+      this.showSnack('missingDataError');
       return;
     }
 
@@ -278,19 +300,19 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     } else if (data.id) {
       url = `${this.apiUrl}/${data.id}`;
     } else {
-      this.snackBar.open('⚠️ Error: No se puede determinar la URL de eliminación (falta ID o configuración custom).', 'Cerrar', { duration: 3000 });
+      this.showSnack('missingUrlError');
       return;
     }
 
-    this.openCustomConfirmation('¿Está seguro de que desea eliminar este registro?', () => {
+    this.openCustomConfirmation(this.t().crud.confirmDelete, () => {
       this.http.delete(url).subscribe({
         next: () => {
-          this.snackBar.open('✅ Registro eliminado con éxito.', 'Cerrar', { duration: 3000 });
+          this.showSnack('deleteSuccess');
           this.loadData(); // Refetch data
         },
         error: (err) => {
           console.error('Error deleting record', err);
-          this.snackBar.open('❌ Error al eliminar el registro.', 'Cerrar', { duration: 3000 });
+          this.showSnack('deleteError');
         }
       });
     });
@@ -298,13 +320,40 @@ export class CrudManagerComponent implements OnInit, OnChanges {
 
   /** Handles form submission from the sidebar. Sends POST (add) or PUT (edit) to the API. */
   handleSubmit(formData: FormData) {
-    // Detect if FormData contains files
+    const mode = this.formMode();
+    const body = this.buildRequestBody(formData, mode);
+
+    if (mode === 'add') {
+      this.executeRequest('post', this.createUrl || this.apiUrl, body, 'addSuccess', 'addError');
+      return;
+    }
+
+    // mode === 'edit': resolve the update URL from input or fall back to apiUrl/{id}
+    const currentData = this.initialData();
+    const url = this.updateUrl
+      ? (typeof this.updateUrl === 'function' ? this.updateUrl(currentData) : this.updateUrl)
+      : (currentData?.id ? `${this.apiUrl}/${currentData.id}` : null);
+
+    if (!url) {
+      this.showSnack('missingUpdateUrlError');
+      return;
+    }
+
+    this.executeRequest('put', url, body, 'updateSuccess', 'updateError');
+  }
+
+  /**
+   * Prepares the request body from FormData. Returns the FormData as-is
+   * when it contains files (multipart upload); otherwise returns a plain
+   * object for JSON submission. In 'add' mode, also generates the next
+   * sequential numeric ID and appends it to the JSON body.
+   */
+  private buildRequestBody(formData: FormData, mode: 'add' | 'edit'): FormData | Record<string, any> {
     let hasFiles = false;
     formData.forEach((value) => {
       if (value instanceof File) hasFiles = true;
     });
 
-    // Build plain object for JSON submissions (no files)
     const data: Record<string, any> = {};
     formData.forEach((value, key) => {
       if (!(value instanceof File)) {
@@ -312,8 +361,8 @@ export class CrudManagerComponent implements OnInit, OnChanges {
       }
     });
 
-    if (this.formMode() === 'add') {
-      // Manual ID Generation for numeric consistency
+    if (mode === 'add') {
+      // Manual ID generation for numeric consistency
       const currentRows = this.rowData();
       let maxId = 0;
       currentRows.forEach(row => {
@@ -323,62 +372,54 @@ export class CrudManagerComponent implements OnInit, OnChanges {
         }
       });
       data['id'] = (maxId + 1).toString();
-
-      const url = this.createUrl || this.apiUrl;
-      // If files exist, send FormData (multipart); otherwise send JSON
-      const body = hasFiles ? formData : data;
-
-      this.http.post(url, body).subscribe({
-        next: () => {
-          this.snackBar.open('✅ Registro agregado con éxito.', 'Cerrar', { duration: 3000 });
-          this.loadData();
-          this.isFormOpen.set(false);
-          this.sidebarService.setSidebarOpen(true);
-        },
-        error: (err) => {
-          console.error('Error adding record', err);
-          this.snackBar.open('❌ Error al agregar registro.', 'Cerrar', { duration: 3000 });
-        }
-      });
-    } else {
-      const currentData = this.initialData();
-      let url = '';
-
-      if (this.updateUrl) {
-        if (typeof this.updateUrl === 'function') {
-          url = this.updateUrl(currentData);
-        } else {
-          url = this.updateUrl;
-        }
-      } else if (currentData && currentData.id) {
-        url = `${this.apiUrl}/${currentData.id}`;
-      } else {
-        this.snackBar.open('⚠️ Error: No se puede determinar la URL de actualización.', 'Cerrar', { duration: 3000 });
-        return;
-      }
-
-      // If files exist, send FormData (multipart); otherwise send JSON
-      const body = hasFiles ? formData : data;
-
-      this.http.put(url, body).subscribe({
-        next: () => {
-          this.snackBar.open('✅ Registro actualizado con éxito.', 'Cerrar', { duration: 3000 });
-          this.loadData();
-          this.isFormOpen.set(false);
-          this.sidebarService.setSidebarOpen(true);
-        },
-        error: (err) => {
-          console.error('Error updating record', err);
-          this.snackBar.open('❌ Error al actualizar registro.', 'Cerrar', { duration: 3000 });
-        }
-      });
     }
+
+    return hasFiles ? formData : data;
+  }
+
+  /**
+   * Executes a POST or PUT request, showing the appropriate snackbar on
+   * success or failure, and refreshing the grid + closing the sidebar
+   * on success. Centralizes HTTP feedback so add/update paths behave
+   * consistently.
+   */
+  private executeRequest(
+    method: 'post' | 'put',
+    url: string,
+    body: FormData | Record<string, any>,
+    successKey: keyof DynamicFormsTranslations['crud'],
+    errorKey: keyof DynamicFormsTranslations['crud']
+  ): void {
+    const request$ = method === 'post' ? this.http.post(url, body) : this.http.put(url, body);
+
+    request$.subscribe({
+      next: () => {
+        this.showSnack(successKey);
+        this.loadData();
+        this.isFormOpen.set(false);
+        this.sidebarService.setSidebarOpen(true);
+      },
+      error: (err) => {
+        console.error(`${method.toUpperCase()} request failed`, err);
+        this.showSnack(errorKey);
+      }
+    });
   }
 
   /** Closes the form sidebar and reopens the list sidebar. */
   handleCancel() {
     this.isFormOpen.set(false);
     this.sidebarService.setSidebarOpen(true);
+  }
+
+  /**
+   * Opens a translated snackbar notification with the standard close action.
+   * Centralizes snackbar config (duration, action label) so all CRUD
+   * feedback stays consistent. Pass a key from the `crud` translation
+   * namespace (e.g. 'addSuccess', 'deleteError').
+   */
+  private showSnack(messageKey: keyof DynamicFormsTranslations['crud']): void {
+    this.snackBar.open(this.t().crud[messageKey], this.t().snackbar.close, { duration: 3000 });
   }
 
   private openCustomConfirmation(message: string, onConfirm: () => void) {

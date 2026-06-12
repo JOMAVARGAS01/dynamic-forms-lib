@@ -1,8 +1,9 @@
-import { Component, signal, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, ChangeDetectorRef, inject, Optional, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 import { ICellRendererParams } from 'ag-grid-community';
 
@@ -26,6 +27,9 @@ import { ICellRendererParams } from 'ag-grid-community';
 export class ActionCellRendererComponent implements ICellRendererAngularComp {
   private params!: ICellRendererParams;
   private cdr = inject(ChangeDetectorRef);
+
+  private _translations = inject(DYNAMIC_FORMS_TRANSLATIONS, { optional: true });
+  t = computed(() => this._translations?.() ?? DEFAULT_TRANSLATIONS);
 
   /** Initializes the cell renderer with AG-Grid parameters. */
   agInit(params: ICellRendererParams): void {

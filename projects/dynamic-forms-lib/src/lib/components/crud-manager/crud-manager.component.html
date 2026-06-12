@@ -4,16 +4,16 @@
 
     <div class="controls-bar">
       <button mat-flat-button (click)="onAdd()">
-        <mat-icon>add</mat-icon> Nuevo
+        <mat-icon>add</mat-icon> {{ t().crud.add }}
       </button>
 
       <button mat-stroked-button (click)="onExport()">
-        <mat-icon>download</mat-icon> Exportar
+        <mat-icon>download</mat-icon> {{ t().crud.export }}
       </button>
 
       <div class="search-container">
         <mat-icon class="search-icon">search</mat-icon>
-        <input type="text" placeholder="Buscar..." (input)="onQuickFilter($event)" #searchInput>
+        <input type="text" [placeholder]="t().crud.search" (input)="onQuickFilter($event)" #searchInput>
         @if(searchInput.value){
         <button class="clear-btn" (click)="clearSearch(searchInput)">
           <mat-icon>close</mat-icon>
@@ -27,7 +27,7 @@
     <ag-grid-angular 
       style="width: 100%; height: 100%;" 
       [rowData]="rowData()" 
-      [columnDefs]="gridColumnDefs"
+      [columnDefs]="gridColumnDefs()"
       [defaultColDef]="defaultColDef" 
       [gridOptions]="gridOptions" 
       (gridReady)="onGridReady($event)">

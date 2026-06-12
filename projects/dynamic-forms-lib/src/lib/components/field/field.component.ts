@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef, Optional, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { switchMap, startWith, tap, catchError, map, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FieldConfig, SelectField, FORM_FIELD_APPEARANCE } from '../../types/dynamic-form.types';
 import { DynamicOptionsService } from '../../services/dynamic-options.service';
+import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 import { MatRadioModule } from '@angular/material/radio';
 
 type Option = { label: string, value: any };
@@ -67,6 +68,9 @@ export class FieldComponent implements OnInit {
   private isFirstTrigger = true;
   hidePassword = signal<boolean>(true);
   private cdr = inject(ChangeDetectorRef);
+
+  private _translations = inject(DYNAMIC_FORMS_TRANSLATIONS, { optional: true });
+  t = computed(() => this._translations?.() ?? DEFAULT_TRANSLATIONS);
 
   ngOnInit() {
     this.setupDynamicOptions();
@@ -238,14 +242,14 @@ export class FieldComponent implements OnInit {
     if (!control || !control.errors) return '';
 
     const errors = control.errors;
-    if (errors['required']) return 'Este campo es requerido.';
-    if (errors['email']) return 'Email inválido.';
-    if (errors['minlength']) return `Mínimo ${errors['minlength'].requiredLength} caracteres.`;
-    if (errors['pattern']) return `El formato ingresado no es válido.`;
-    if (errors['min']) return `El valor mínimo es ${this.field.validations?.min}.`;
-    if (errors['max']) return `El valor máximo es ${this.field.validations?.max}.`;
+    if (errors['required']) return this.t().field.required;
+    if (errors['email']) return this.t().field.invalidEmail;
+    if (errors['minlength']) return this.t().field.minLength.replace('{length}', errors['minlength'].requiredLength);
+    if (errors['pattern']) return this.t().field.invalidFormat;
+    if (errors['min']) return this.t().field.minValue.replace('{min}', String(this.field.validations?.min));
+    if (errors['max']) return this.t().field.maxValue.replace('{max}', String(this.field.validations?.max));
 
-    return 'Dato inválido.';
+    return this.t().field.invalidData;
   }
 
   /** Toggles a value in a checkbox-multiple field's array of selected values. */

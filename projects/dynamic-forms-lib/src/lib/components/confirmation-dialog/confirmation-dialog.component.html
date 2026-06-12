@@ -1,8 +1,8 @@
-<h2 mat-dialog-title>Confirmación</h2>
+<h2 mat-dialog-title>{{ t().dialog.confirmation }}</h2>
 <mat-dialog-content>
     {{ data.message }}
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-    <button mat-button [mat-dialog-close]="false">Cancelar</button>
-    <button mat-flat-button color="warn" [mat-dialog-close]="true" cdkFocusInitial>Aceptar</button>
+    <button mat-button [mat-dialog-close]="false">{{ t().dialog.cancel }}</button>
+    <button mat-flat-button color="warn" [mat-dialog-close]="true" cdkFocusInitial>{{ t().dialog.accept }}</button>
 </mat-dialog-actions>
