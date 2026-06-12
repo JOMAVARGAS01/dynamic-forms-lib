@@ -272,17 +272,19 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   }
 
   handleSubmit(formData: FormData) {
+    // Detect if FormData contains files
+    let hasFiles = false;
+    formData.forEach((value) => {
+      if (value instanceof File) hasFiles = true;
+    });
+
+    // Build plain object for JSON submissions (no files)
     const data: Record<string, any> = {};
     formData.forEach((value, key) => {
       if (!(value instanceof File)) {
         data[key] = value;
       }
     });
-
-    // Handle array-like strings for checkbox-multiple coming from FormData (e.g. "a,b")
-    // If the form config defines a field as checkbox-multiple, we might want to ensure it's saved as an array or kept as CSV depending on backend preference.
-    // Given the user's db.json has mixed types but seems to prefer CSV logic implicitly via FormData, 
-    // we will leave it as is for now, but the ID generation is priority.
 
     if (this.formMode() === 'add') {
       // Manual ID Generation for numeric consistency
@@ -294,34 +296,13 @@ export class CrudManagerComponent implements OnInit, OnChanges {
           maxId = idNum;
         }
       });
-      // Assign new ID as string or number depending on preference. DB uses strings "1", "2".
       data['id'] = (maxId + 1).toString();
 
       const url = this.createUrl || this.apiUrl;
+      // If files exist, send FormData (multipart); otherwise send JSON
+      const body = hasFiles ? formData : data;
 
-      this.http.post(url, data).subscribe({ // Sending simple object for now. If formData is needed specifically as multipart/form-data, we might need adjustments, but HttpClient handles objects as JSON by default which is typical. User said "se le debe enviar el formData completo", but usually JSON servers expect JSON. Let's send `data` (the object) because `json-server` expects JSON.
-        // WAIT, `data` was derived from formData in previous lines.
-        // "el agregar y el Update se le debe enviar el formData completo"
-        // If the backend expects Multipart/FormData, we should pass `formData`.
-        // If it expects JSON (like json-server), we pass `data`. 
-        // Given the user is using `json-server` (based on metadata), sending `formData` (Multipart) might fail or not be parsed correctly by standard json-server without middleware. 
-        // HOWEVER, the user explicitly asked: "agregar y el Update se le debe enviar el formData completo". 
-        // I will respect the user's request and send `data` (the object) for now since `handleSubmit` converts `FormData` to `data` object in lines 250-256. 
-        // Let's re-read: "se le debe enviar el formData completo".
-        // The current `handleSubmit` manually converts `FormData` to a POJO `data`.
-        // If I want to support files (which `FormData` entails), I should probably send the original `formData` if the user wants "FormData".
-        // BUT, `json-server` doesn't handle files well natively. 
-        // I will assume the user meant the *data* from the form, not necessarily the `FormData` object class, UNLESS they have file uploads.
-        // The `forms.component.ts` emits `FormData`.
-        // `crud-manager` receives `FormData`.
-        // I will act on the "send FormData" instruction literally if possible, but if I send `FormData` to `json-server` it might likely fail.
-        // Note: The user's code `onFileChange` suggests file handling.
-        // Let's look at `handleSubmit` again. It converts to `data` (POJO) excluding files: `if (!(value instanceof File))`.
-        // This implies the current implementation intentionally strips files for the "mock". 
-        // If I want to support files, I should send `formData` directly.
-        // I'll stick to sending the POJO `data` for now as it matches the existing loop logic, but I'll make the HTTP call.
-        // Actually, let's use the local `data` object which is already prepared from `formData`.
-
+      this.http.post(url, body).subscribe({
         next: () => {
           this.snackBar.open('✅ Registro agregado con éxito.', 'Cerrar', { duration: 3000 });
           this.loadData();
@@ -350,7 +331,10 @@ export class CrudManagerComponent implements OnInit, OnChanges {
         return;
       }
 
-      this.http.put(url, data).subscribe({
+      // If files exist, send FormData (multipart); otherwise send JSON
+      const body = hasFiles ? formData : data;
+
+      this.http.put(url, body).subscribe({
         next: () => {
           this.snackBar.open('✅ Registro actualizado con éxito.', 'Cerrar', { duration: 3000 });
           this.loadData();
