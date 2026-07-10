@@ -43,6 +43,13 @@ export interface DynamicFormsTranslations {
     edit: string;
     delete: string;
   };
+  formArray: {
+    addItem: string;
+    removeItem: string;
+    itemTitle: string;
+    minItemsError: string;
+    confirmRemoveItem: string;
+  };
   snackbar: {
     close: string;
   };
@@ -90,6 +97,13 @@ export const DEFAULT_TRANSLATIONS: DynamicFormsTranslations = {
   actionCell: {
     edit: 'Editar Registro',
     delete: 'Eliminar Registro',
+  },
+  formArray: {
+    addItem: 'Agregar',
+    removeItem: 'Eliminar',
+    itemTitle: 'Elemento {{index}}',
+    minItemsError: 'Mínimo {min} elemento(s) requerido(s).',
+    confirmRemoveItem: '¿Está seguro de que desea eliminar este elemento?',
   },
   snackbar: {
     close: 'Cerrar',

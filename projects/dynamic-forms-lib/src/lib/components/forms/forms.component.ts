@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef, Optional, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatStepperModule } from '@angular/material/stepper';
@@ -8,9 +8,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { FormConfig, FieldConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN } from '../../types/dynamic-form.types';
+import { FormConfig, FieldConfig, FormArrayField, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN } from '../../types/dynamic-form.types';
 import { FieldComponent } from '../field/field.component';
+import { FormArrayComponent } from '../form-array/form-array.component';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
+import { applyVisibility, buildFormArrayValidators, buildItemFormGroup, isFormArray, normalizeDates } from '../visibility';
 
 @Component({
   selector: 'app-forms',
@@ -19,7 +21,8 @@ import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATI
   imports: [
     CommonModule, ReactiveFormsModule,
     MatTabsModule, MatExpansionModule, MatStepperModule, MatButtonModule, MatCardModule, MatIconModule, MatTooltipModule,
-    FieldComponent
+    FieldComponent,
+    FormArrayComponent
   ],
   styleUrls: ['./forms.component.css'],
   templateUrl: './forms.component.html'
@@ -82,6 +85,12 @@ export class FormsComponent implements OnInit {
       group.fields.forEach(field => {
         if (field.type === 'file') return;
 
+        if (field.type === 'form-array') {
+          // form-array: the control is a FormArray, items are FormGroups built per field
+          controls[field.name] = this.fb.array([], { validators: buildFormArrayValidators(field as FormArrayField) });
+          return;
+        }
+
         const validators = [];
         if (field.validations?.required) validators.push(Validators.required);
         if (field.validations?.minLength) validators.push(Validators.minLength(field.validations.minLength));
@@ -138,22 +147,37 @@ export class FormsComponent implements OnInit {
     this.config.groups.forEach(group => {
       group.fields.forEach(field => {
         const value = data[field.name];
-        if (value !== undefined) {
-          if (field.type === 'date') {
-            patchValue[field.name] = this.parseDate(value);
-          } else if (field.type === 'checkbox' || field.type === 'switch') {
-            patchValue[field.name] = (String(value).toLowerCase() === 'false') ? false : !!value;
-          } else if (field.type === 'checkbox-multiple') {
-            if (Array.isArray(value)) {
-              patchValue[field.name] = value;
-            } else if (typeof value === 'string') {
-              patchValue[field.name] = value.split(',').map(v => v.trim()).filter(v => v !== '');
-            } else {
-              patchValue[field.name] = value ? [value] : [];
-            }
-          } else {
-            patchValue[field.name] = value;
+        if (value === undefined) return;
+
+        if (field.type === 'form-array') {
+          // Per spec: initialData[name] is an array (no JSON.parse). One FormGroup per entry.
+          const arrField = field as FormArrayField;
+          const arr = this.form.get(field.name) as FormArray | null;
+          if (!arr) return;
+          if (Array.isArray(value)) {
+            value.forEach((itemData: any) => {
+              if (itemData && typeof itemData === 'object') {
+                arr.push(buildItemFormGroup(this.fb, arrField.fields, itemData));
+              }
+            });
           }
+          return;
+        }
+
+        if (field.type === 'date') {
+          patchValue[field.name] = this.parseDate(value);
+        } else if (field.type === 'checkbox' || field.type === 'switch') {
+          patchValue[field.name] = (String(value).toLowerCase() === 'false') ? false : !!value;
+        } else if (field.type === 'checkbox-multiple') {
+          if (Array.isArray(value)) {
+            patchValue[field.name] = value;
+          } else if (typeof value === 'string') {
+            patchValue[field.name] = value.split(',').map(v => v.trim()).filter(v => v !== '');
+          } else {
+            patchValue[field.name] = value ? [value] : [];
+          }
+        } else {
+          patchValue[field.name] = value;
         }
       });
     });
@@ -172,40 +196,14 @@ export class FormsComponent implements OnInit {
   }
 
   private updateVisibility() {
-    // Use getRawValue() to include disabled controls' values
-    const currentValues = this.form.getRawValue();
     const newVisibilityMap: Record<string, boolean> = {};
 
     this.config.groups.forEach(group => {
+      // `form-array` fields don't have a single control: visibility is managed
+      // inside `FormArrayComponent` per item. Skip them at the root.
       group.fields.forEach(field => {
-        let isVisible = true;
-
-        if (field.visibleIf) {
-          const triggerValue = currentValues[field.visibleIf.field];
-          const expectedValue = field.visibleIf.value;
-
-          // Handle boolean comparisons properly (for switch/checkbox fields)
-          if (typeof expectedValue === 'boolean') {
-            isVisible = !!triggerValue === expectedValue;
-          } else {
-            isVisible = triggerValue === expectedValue;
-          }
-        }
-
-        newVisibilityMap[field.name] = isVisible;
-
-        // Disable/Enable control based on visibility to prevent validation issues
-        const control = this.form.get(field.name);
-        if (control && field.type !== 'file') {
-          if (isVisible) {
-            // Skip enable for readonly fields (managed via field.value = {value: X, disabled: true})
-            if (!field.readonly) {
-              control.enable({ emitEvent: false });
-            }
-          } else {
-            control.disable({ emitEvent: false });
-          }
-        }
+        if (field.type === 'form-array') return;
+        applyVisibility(this.form, [field], newVisibilityMap);
       });
     });
 
@@ -223,11 +221,26 @@ export class FormsComponent implements OnInit {
     this.files.set(event.name, event.file);
   }
 
-  // Check if form has any invalid ENABLED controls (visible fields only)
+  // Check if form has any invalid ENABLED controls (visible fields only).
+  // For FormArray fields, recurse one level: the array's own validity
+  // (which includes minLength) AND each item's inner FormGroup controls.
   get isFormInvalid(): boolean {
     return Object.keys(this.form.controls).some(key => {
       const control = this.form.get(key);
-      return control && control.invalid && control.enabled;
+      if (!control) return false;
+      if (isFormArray(control)) {
+        if (control.invalid) return true;
+        return (control.controls as FormGroup[]).some(item => this.hasInvalidEnabledControl(item));
+      }
+      return control.invalid && control.enabled;
+    });
+  }
+
+  /** Walks a FormGroup's direct controls and returns true if any ENABLED control is invalid. */
+  private hasInvalidEnabledControl(group: FormGroup): boolean {
+    return Object.keys(group.controls).some(ctrlKey => {
+      const inner = group.get(ctrlKey);
+      return !!inner && inner.invalid && inner.enabled;
     });
   }
 
@@ -254,7 +267,19 @@ export class FormsComponent implements OnInit {
     const formData = new FormData();
 
     Object.keys(this.form.controls).forEach(key => {
-      let val = this.form.get(key)?.value;
+      const control = this.form.get(key);
+      if (!control) return;
+
+      // form-array: serialize as a single JSON string under the field's name.
+      // Dates inside items are normalized to yyyy-MM-dd so backend parsers
+      // stay consistent with the root form's date format.
+      if (isFormArray(control)) {
+        const serialized = JSON.stringify(normalizeDates(control.value));
+        formData.append(key, serialized);
+        return;
+      }
+
+      let val = control.value;
       // Ensure it's a valid date object
       if (val instanceof Date && !isNaN(val.getTime())) {
         const year = val.getFullYear();
@@ -283,7 +308,12 @@ export class FormsComponent implements OnInit {
       if (!this.isVisible(field)) return false;
 
       const control = this.form.get(field.name);
-      return control ? control.invalid : false;
+      if (!control) return false;
+      if (isFormArray(control)) {
+        if (control.invalid) return true;
+        return (control.controls as FormGroup[]).some(item => this.hasInvalidEnabledControl(item));
+      }
+      return control.invalid;
     });
   }
 

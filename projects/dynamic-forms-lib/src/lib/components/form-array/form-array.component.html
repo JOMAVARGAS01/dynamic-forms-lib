@@ -1,0 +1,52 @@
+<div class="form-array-wrapper">
+    <div class="form-array-header">
+        <span class="form-array-label">{{ field.label }}</span>
+        <button matButton="outlined" type="button" color="primary" class="add-button"
+            (click)="addItem()" [attr.aria-label]="field.addButtonLabel || t().formArray.addItem">
+            <mat-icon>add</mat-icon>
+            {{ field.addButtonLabel || t().formArray.addItem }}
+        </button>
+    </div>
+
+    @if (formArray && formArray.length > 0) {
+    <mat-accordion class="form-array-items" multi>
+        @for (item of formArray.controls; track trackItem($index, $any(item)); let i = $index) {
+        <mat-expansion-panel [expanded]="true" class="form-array-item">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    {{ itemTitle(i, $any(item)) }}
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="fields-grid form-array-item-fields">
+                @for (innerField of field.fields; track innerField.name) {
+                @if (innerField.type !== 'file' && innerField.type !== 'form-array') {
+                @if (isFieldVisible(i, innerField.name)) {
+                <div [style.grid-column]="'span ' + (innerField.gridCols || 12)">
+                    <app-field [appearance]="appearance" [field]="innerField" [form]="$any(item)">
+                    </app-field>
+                </div>
+                }
+                }
+                }
+            </div>
+
+            <mat-action-row>
+                <button matButton="text" color="warn" type="button" (click)="removeItem(i)"
+                    [attr.aria-label]="field.removeButtonLabel || t().formArray.removeItem">
+                    <mat-icon>delete</mat-icon>
+                    {{ field.removeButtonLabel || t().formArray.removeItem }}
+                </button>
+            </mat-action-row>
+        </mat-expansion-panel>
+        }
+    </mat-accordion>
+    }
+
+    @if (minItemsError) {
+    <div class="form-array-error" role="alert">
+        <mat-icon class="error-icon">warning</mat-icon>
+        <span>{{ minItemsErrorText }}</span>
+    </div>
+    }
+</div>

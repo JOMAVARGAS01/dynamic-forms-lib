@@ -1,11 +1,13 @@
 export * from './lib/components/crud-manager/crud-manager.component';
 export * from './lib/components/forms/forms.component';
 export * from './lib/components/field/field.component';
+export * from './lib/components/form-array/form-array.component';
 export * from './lib/components/confirmation-dialog/confirmation-dialog.component';
 export * from './lib/components/action-cell/action-cell.component';
 export * from './lib/services/dynamic-options.service';
 export * from './lib/services/theme.service';
 export * from './lib/services/sidebar.service';
 export * from './lib/types/dynamic-form.types';
-export { FORM_FIELD_APPEARANCE_TOKEN, FormFieldAppearance } from './lib/types/dynamic-form.types';
+export { FORM_FIELD_APPEARANCE_TOKEN } from './lib/types/dynamic-form.types';
+export type { FormFieldAppearance } from './lib/types/dynamic-form.types';
 export * from './lib/types/translations';

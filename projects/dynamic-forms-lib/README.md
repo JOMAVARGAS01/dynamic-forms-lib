@@ -33,7 +33,7 @@ That's it. One tag, full CRUD screen.
 
 | Feature | Details |
 |---------|---------|
-| **18 field types** | text, number, email, password, tel, url, color, time, week, month, textarea, date, select, autocomplete, checkbox, checkbox-multiple, radio, switch, file |
+| **19 field types** | text, number, email, password, tel, url, color, time, week, month, textarea, date, select, autocomplete, checkbox, checkbox-multiple, radio, switch, file, form-array |
 | **4 layouts** | tabs, accordion, simple (cards), steps (stepper) |
 | **Conditional visibility** | `visibleIf` — show/hide fields based on other field values |
 | **Read-only mode** | `readonly` property per field |
@@ -42,6 +42,7 @@ That's it. One tag, full CRUD screen.
 | **Dynamic options** | Load select/autocomplete options from API with cascading dependencies |
 | **Dependent options** | Local cascading select via `dependentOptions.map` |
 | **File upload** | Native file input with FormData submission |
+| **Repeating groups** | `form-array` — collapsible items, per-item validation, per-item `visibleIf` / `dependentOptions` / `api.dependsOn`, JSON-string serialization |
 | **Appearance token** | Global `fill`/`outline` injection via `FORM_FIELD_APPEARANCE_TOKEN` |
 
 ### 📊 Grid Features (AG Grid)
@@ -251,7 +252,95 @@ interface GroupConfig {
 
 ### Supported `ControlType`
 
-`text` · `number` · `email` · `password` · `tel` · `url` · `color` · `time` · `week` · `month` · `textarea` · `date` · `select` · `autocomplete` · `checkbox` · `checkbox-multiple` · `radio` · `switch` · `file`
+`text` · `number` · `email` · `password` · `tel` · `url` · `color` · `time` · `week` · `month` · `textarea` · `date` · `select` · `autocomplete` · `checkbox` · `checkbox-multiple` · `radio` · `switch` · `file` · `form-array`
+
+---
+
+## 🧩 `form-array` — Repeating groups
+
+Render a collapsible, repeating sub-form inside any group. Each item is its own `FormGroup`; the whole array is a `FormArray`. On submit, the array is serialized as **a single JSON string** under the field's name, keeping the existing flat-FormData contract that .NET 9 (and `json-server`) understand.
+
+### Example
+
+```typescript
+{
+  type: 'form-array',
+  name: 'cuentasBancarias',
+  label: 'Cuentas bancarias',
+  minItems: 1,
+  itemTitle: 'Cuenta #{{index}} - {{banco}}',
+  addButtonLabel: 'Agregar cuenta',
+  removeButtonLabel: 'Quitar cuenta',
+  confirmRemoveMessage: '¿Está seguro de que desea eliminar esta cuenta?',
+  defaultItem: { pais: 'AR', moneda: 'ARS' },
+  fields: [
+    { type: 'text', label: 'Banco',       name: 'banco',   gridCols: 6, validations: { required: true } },
+    { type: 'text', label: 'Nº de cuenta', name: 'numero',  gridCols: 6, validations: { required: true } },
+    { type: 'select', label: 'País',       name: 'pais',    gridCols: 4,
+      options: [{label:'Argentina',value:'AR'},{label:'Brasil',value:'BR'},{label:'Chile',value:'CL'}] },
+    { type: 'select', label: 'Moneda',     name: 'moneda',  gridCols: 4,
+      dependentOptions: {
+        field: 'pais',
+        map: {
+          AR: [{label:'Peso Argentino',value:'ARS'},{label:'Dólar',value:'USD'}],
+          BR: [{label:'Real',value:'BRL'},{label:'Dólar',value:'USD'}],
+          CL: [{label:'Peso Chileno',value:'CLP'}]
+        }
+      }
+    },
+    { type: 'switch', label: 'Principal',  name: 'principal', gridCols: 4 }
+  ]
+}
+```
+
+### Field reference
+
+| Property | Type | Required | Description |
+|----------|------|:--------:|-------------|
+| `type` | `'form-array'` | ✅ | Discriminator |
+| `name` | `string` | ✅ | Form control key; submitted as one FormData entry |
+| `label` | `string` | ✅ | Section label shown above the array |
+| `fields` | `FieldConfig[]` | ✅ | Inner fields rendered per item |
+| `gridCols` | `number` | ❌ | 1–12 grid columns (default: 12) |
+| `minItems` | `number` | ❌ | Non-negative int (default `0`). Adds `Validators.minLength` to the `FormArray`; the form is invalid below this count |
+| `itemTitle` | `string` | ❌ | Per-item panel title. Supports `{{index}}` (1-based) and `{{fieldName}}` (any child field's current value). Unknown tokens pass through verbatim |
+| `defaultItem` | `Record<string, any>` | ❌ | Pre-filled values for newly-added items (per inner-field `name`) |
+| `addButtonLabel` | `string` | ❌ | Override for the global `formArray.addItem` translation |
+| `removeButtonLabel` | `string` | ❌ | Override for the global `formArray.removeItem` translation |
+| `confirmRemoveMessage` | `string` | ❌ | Override for the global `formArray.confirmRemoveItem` translation |
+
+### Behavior
+
+- **Add** appends a new item with `defaultItem` values pre-applied; the new panel is auto-expanded.
+- **Remove** opens a `ConfirmationDialogComponent`; on confirm, the item is removed.
+- **Collapse / expand** each item via the `mat-expansion-panel` header.
+- **Per-item `visibleIf`** resolves against the **item's own FormGroup** (no `../` parent reference in v1).
+- **Per-item `dependentOptions` and `api.dependsOn`** resolve against the **item's own FormGroup** (free — `FieldComponent` already takes a `FormGroup` as `@Input`).
+- **Submission** emits a single `FormData` entry, e.g. `cuentasBancarias = '[{"banco":"Galicia","pais":"AR","moneda":"ARS"}]'`.
+- **Edit-mode population** reads `initialData[name]` as an **array** and creates one `FormGroup` per entry.
+- **Backwards compatibility** — existing configs without `form-array` keep working unchanged; `FieldConfig` is widened to a 4-way union with no break at call sites that already use `field.type` narrowing.
+
+### v1 scope limits
+
+- ❌ No `maxItems` cap
+- ❌ No drag-and-drop reorder
+- ❌ No nested `form-array` (an item MUST NOT contain another `form-array`)
+- ❌ No `../` parent reference in `visibleIf`
+- ❌ No deleted-items tracking (`_arrayName_deleted`)
+- ❌ No per-item custom validators
+- ❌ `type: 'file'` inside an item is **silently skipped** (no control created, not rendered)
+
+### i18n keys
+
+The `formArray` namespace is part of `DynamicFormsTranslations` (Spanish defaults; provide your own `provideDynamicFormsTranslations` for English or any other language):
+
+| Key | Spanish default |
+|---|---|
+| `formArray.addItem` | `Agregar` |
+| `formArray.removeItem` | `Eliminar` |
+| `formArray.itemTitle` | `Elemento {{index}}` |
+| `formArray.minItemsError` | `Mínimo {min} elemento(s) requerido(s).` |
+| `formArray.confirmRemoveItem` | `¿Está seguro de que desea eliminar este elemento?` |
 
 ---
 
@@ -337,10 +426,10 @@ const config = {
 - [ ] Input masking
 - [ ] Async validation
 - [ ] Custom validators
-- [ ] Form arrays / dynamic rows
 - [ ] Stackblitz live demo
 - [ ] Angular 21 Signal Forms integration
 - [x] i18n / Translations (v0.1.2)
+- [x] Form arrays / dynamic rows (`form-array` field type, v1)
 
 ---
 

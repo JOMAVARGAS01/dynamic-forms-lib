@@ -9,8 +9,13 @@
         @for (field of entry.group.fields; track field.name) {
         @if (isVisible(field)) {
         <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          @if (field.type === 'form-array') {
+          <app-form-array [appearance]="appearance" [field]="$any(field)" [formArray]="$any(form.get(field.name))">
+          </app-form-array>
+          } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
             (fileChange)="onFileChange($event)"></app-field>
+          }
         </div>
         }
         }
@@ -35,8 +40,13 @@
         @for (field of group.fields; track field.name) {
         @if (isVisible(field)) {
         <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          @if (field.type === 'form-array') {
+          <app-form-array [appearance]="appearance" [field]="$any(field)" [formArray]="$any(form.get(field.name))">
+          </app-form-array>
+          } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
             (fileChange)="onFileChange($event)"></app-field>
+          }
         </div>
         }
         }
@@ -57,8 +67,13 @@
         @for (field of group.fields; track field.name) {
         @if (isVisible(field)) {
         <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          @if (field.type === 'form-array') {
+          <app-form-array [appearance]="appearance" [field]="$any(field)" [formArray]="$any(form.get(field.name))">
+          </app-form-array>
+          } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
             (fileChange)="onFileChange($event)"></app-field>
+          }
         </div>
         }
         }
@@ -79,8 +94,13 @@
         @for (field of group.fields; track field.name) {
         @if (isVisible(field)) {
         <div [style.grid-column]="'span ' + (field.gridCols || 12)">
+          @if (field.type === 'form-array') {
+          <app-form-array [appearance]="appearance" [field]="$any(field)" [formArray]="$any(form.get(field.name))">
+          </app-form-array>
+          } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
             (fileChange)="onFileChange($event)"></app-field>
+          }
         </div>
         }
         }

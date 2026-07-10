@@ -15,7 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { FieldConfig, SelectField, FORM_FIELD_APPEARANCE } from '../../types/dynamic-form.types';
+import { FieldConfig, SelectField, BaseField, RenderableFieldConfig, FORM_FIELD_APPEARANCE } from '../../types/dynamic-form.types';
 import { DynamicOptionsService } from '../../services/dynamic-options.service';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 import { MatRadioModule } from '@angular/material/radio';
@@ -43,7 +43,7 @@ type Option = { label: string, value: any };
  */
 export class FieldComponent implements OnInit {
   /** Configuration for this field (type, name, validations, options, etc.). */
-  @Input({ required: true }) field!: FieldConfig;
+  @Input({ required: true }) field!: RenderableFieldConfig;
   /** Material appearance style for the form field (outline, fill, legacy, standard). */
   @Input({ required: true }) appearance: typeof FORM_FIELD_APPEARANCE = FORM_FIELD_APPEARANCE;
   /** The parent FormGroup this field is bound to. */
@@ -246,8 +246,8 @@ export class FieldComponent implements OnInit {
     if (errors['email']) return this.t().field.invalidEmail;
     if (errors['minlength']) return this.t().field.minLength.replace('{length}', errors['minlength'].requiredLength);
     if (errors['pattern']) return this.t().field.invalidFormat;
-    if (errors['min']) return this.t().field.minValue.replace('{min}', String(this.field.validations?.min));
-    if (errors['max']) return this.t().field.maxValue.replace('{max}', String(this.field.validations?.max));
+    if (errors['min']) return this.t().field.minValue.replace('{min}', String((this.field as BaseField).validations?.min));
+    if (errors['max']) return this.t().field.maxValue.replace('{max}', String((this.field as BaseField).validations?.max));
 
     return this.t().field.invalidData;
   }

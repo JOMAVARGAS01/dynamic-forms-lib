@@ -203,6 +203,84 @@ export class PersonasPageComponent {
                     },
                 ],
             },
+            {
+                label: 'Cuentas Bancarias (form-array smoke)',
+                type: 'simple',
+                fields: [
+                    {
+                        type: 'form-array',
+                        name: 'cuentasBancarias',
+                        label: 'Cuentas bancarias',
+                        gridCols: 12,
+                        minItems: 1,
+                        itemTitle: 'Cuenta #{{index}} - {{banco}}',
+                        addButtonLabel: 'Agregar cuenta',
+                        removeButtonLabel: 'Quitar cuenta',
+                        confirmRemoveMessage: '¿Está seguro de que desea eliminar esta cuenta?',
+                        defaultItem: { pais: 'AR', moneda: 'ARS' },
+                        fields: [
+                            {
+                                type: 'text',
+                                label: 'Banco',
+                                name: 'banco',
+                                gridCols: 6,
+                                validations: { required: true },
+                            },
+                            {
+                                type: 'text',
+                                label: 'Número de cuenta',
+                                name: 'numero',
+                                gridCols: 6,
+                                validations: { required: true },
+                            },
+                            {
+                                type: 'select',
+                                label: 'País',
+                                name: 'pais',
+                                gridCols: 4,
+                                options: [
+                                    { label: 'Argentina', value: 'AR' },
+                                    { label: 'Brasil', value: 'BR' },
+                                    { label: 'Chile', value: 'CL' },
+                                ],
+                                validations: { required: true },
+                            },
+                            {
+                                type: 'select',
+                                label: 'Moneda',
+                                name: 'moneda',
+                                gridCols: 4,
+                                dependentOptions: {
+                                    field: 'pais',
+                                    map: {
+                                        AR: [
+                                            { label: 'Peso Argentino', value: 'ARS' },
+                                            { label: 'Dólar', value: 'USD' },
+                                        ],
+                                        BR: [
+                                            { label: 'Real', value: 'BRL' },
+                                            { label: 'Dólar', value: 'USD' },
+                                        ],
+                                        CL: [{ label: 'Peso Chileno', value: 'CLP' }],
+                                    },
+                                },
+                            },
+                            {
+                                type: 'switch',
+                                label: 'Cuenta principal',
+                                name: 'principal',
+                                gridCols: 4,
+                            },
+                            {
+                                type: 'file',
+                                label: 'Comprobante (no se renderiza dentro de items)',
+                                name: 'comprobante',
+                                gridCols: 12,
+                            },
+                        ],
+                    },
+                ],
+            },
         ],
     };
 
