@@ -83,6 +83,12 @@
             <mat-option [value]="opt.value">{{opt.label}}</mat-option>
             }
         </mat-select>
+        @if (hasQuickAdd()) {
+        <button matSuffix mat-icon-button type="button" class="quick-add-btn"
+            (click)="openQuickAdd()" matTooltip="Agregar nuevo">
+            <mat-icon>add</mat-icon>
+        </button>
+        }
         @if (hasError()) { <mat-error>{{getErrorMessage()}}</mat-error> }
     </mat-form-field>
     }
@@ -131,6 +137,12 @@
             <span class="file-name">{{ fileName() || 'Ningún archivo seleccionado' }}</span>
         </div>
         @if (hasError()) { <mat-error class="error-text">Archivo requerido</mat-error> }
+    </div>
+    }
+    @case ('file-array') {
+    <div class="full-width">
+        <app-file-array [field]="$any(field)" (filesChange)="onFileArrayChange($event)">
+        </app-file-array>
     </div>
     }
     @case ('checkbox') {

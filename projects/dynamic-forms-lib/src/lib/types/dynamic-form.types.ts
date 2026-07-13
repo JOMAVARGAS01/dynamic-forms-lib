@@ -21,7 +21,8 @@ export type ControlType =
   | 'time'
   | 'url'
   | 'week'
-  | 'form-array';
+  | 'form-array'
+  | 'file-array';
 
 /** ControlType union excluding the 'form-array' literal. Used by `BaseField` so that
  *  TypeScript narrowing via `field.type === 'form-array'` correctly isolates `FormArrayField`. */
@@ -76,6 +77,18 @@ export interface SelectField extends BaseField {
     map: Record<string, Option[]>;
   };
   displayKey?: string;
+  quickAdd?: {
+    resource: string;
+    label?: string;
+    /** Fields to show in the quick-add dialog. Defaults to [{ name: 'name', label: 'Nombre', required: true }] */
+    fields?: Array<{
+      name: string;
+      label: string;
+      type?: 'text' | 'textarea' | 'number';
+      required?: boolean;
+      placeholder?: string;
+    }>;
+  };
 }
 
 export interface AutocompleteField extends BaseField {
@@ -119,7 +132,16 @@ export interface FormArrayField {
   confirmRemoveMessage?: string;
 }
 
-export type FieldConfig = SelectField | TextField | BaseField | FormArrayField;
+/** Multi-file upload field with thumbnail preview, per-file delete, and progress. */
+export interface FileArrayField extends BaseField {
+  type: 'file-array';
+  accept?: string;
+  maxSize?: number;
+  maxFiles?: number;
+  uploadUrl?: string;
+}
+
+export type FieldConfig = SelectField | TextField | BaseField | FormArrayField | FileArrayField;
 
 /** Field config that can be rendered by `FieldComponent` — excludes `FormArrayField`,
  *  which is rendered by `FormArrayComponent` instead. Used to narrow the

@@ -19,6 +19,10 @@ import { FieldConfig, SelectField, BaseField, RenderableFieldConfig, FORM_FIELD_
 import { DynamicOptionsService } from '../../services/dynamic-options.service';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 import { MatRadioModule } from '@angular/material/radio';
+import { FileArrayComponent } from '../file-array/file-array.component';
+import { QuickAddDialogComponent } from '../quick-add-dialog/quick-add-dialog.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { HttpClient } from '@angular/common/http';
 
 type Option = { label: string, value: any };
 
@@ -31,7 +35,8 @@ type Option = { label: string, value: any };
     MatFormFieldModule, MatInputModule, MatSelectModule, MatCheckboxModule,
     MatSlideToggleModule, MatDatepickerModule, MatNativeDateModule,
     MatOptionModule, MatButtonModule, MatProgressSpinnerModule,
-    MatAutocompleteModule, MatIconModule, MatTooltipModule, MatRadioModule
+    MatAutocompleteModule, MatIconModule, MatTooltipModule, MatRadioModule,
+    FileArrayComponent, MatDialogModule
   ],
   styleUrls: ['./field.component.css'],
   templateUrl: './field.component.html'
@@ -51,8 +56,12 @@ export class FieldComponent implements OnInit {
 
   /** Emits when a file is selected, containing the field name and File object. */
   @Output() fileChange = new EventEmitter<{ name: string; file: File }>();
+  /** Emits when file-array files change, containing the full File array. */
+  @Output() fileArrayChange = new EventEmitter<File[]>();
 
   private optionsService = inject(DynamicOptionsService);
+  private dialog = inject(MatDialog);
+  private http = inject(HttpClient);
 
   /** Options loaded from a dynamic API source for select/autocomplete fields. */
   apiOptions = signal<Option[]>([]);
@@ -146,8 +155,11 @@ export class FieldComponent implements OnInit {
 
       if (control && combined.length > 0) {
         if (currentValue !== null && currentValue !== undefined && currentValue !== '') {
+          const valueToRestore = currentValue;
           setTimeout(() => {
-            control.setValue(currentValue, { emitEvent: false });
+            control.setValue(null, { emitEvent: false });
+            control.setValue(valueToRestore, { emitEvent: false });
+            this.cdr.markForCheck();
           }, 0);
         } else {
           control.setValue(combined[0].value);
@@ -234,6 +246,42 @@ export class FieldComponent implements OnInit {
   hasError(): boolean {
     const control = this.form.get(this.field.name);
     return !!(control && control.invalid && (control.touched || control.dirty));
+  }
+
+  /** Whether the current field has a quickAdd config. */
+  hasQuickAdd(): boolean {
+    return !!(this.field as SelectField).quickAdd;
+  }
+
+  /** Handles file-array file changes from the FileArrayComponent child. */
+  onFileArrayChange(files: File[]) {
+    this.fileArrayChange.emit(files);
+    this.cdr.markForCheck();
+  }
+
+  /** Opens the QuickAddDialog and appends the new option on success. */
+  openQuickAdd() {
+    const selectField = this.field as SelectField;
+    const qaConfig = selectField.quickAdd;
+    if (!qaConfig) return;
+
+    const dialogRef = this.dialog.open(QuickAddDialogComponent, {
+      width: '400px',
+      data: { 
+        resource: qaConfig.resource, 
+        label: qaConfig.label,
+        fields: qaConfig.fields  // Pass fields config if provided
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.allOptions.update(prev => [...prev, result]);
+        this.filteredOptions.update(prev => [...prev, result]);
+        this.form.get(this.field.name)?.setValue(result.value);
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   /** Returns a user-friendly validation error message for the current field control. */

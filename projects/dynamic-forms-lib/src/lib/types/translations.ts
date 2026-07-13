@@ -53,6 +53,16 @@ export interface DynamicFormsTranslations {
   snackbar: {
     close: string;
   };
+  fileArray: {
+    addFiles: string;
+    maxFilesError: string;
+    removeFile: string;
+    uploading: string;
+  };
+  quickAdd: {
+    title: string;
+    add: string;
+  };
 }
 
 export const DEFAULT_TRANSLATIONS: DynamicFormsTranslations = {
@@ -107,6 +117,16 @@ export const DEFAULT_TRANSLATIONS: DynamicFormsTranslations = {
   },
   snackbar: {
     close: 'Cerrar',
+  },
+  fileArray: {
+    addFiles: 'Agregar archivos',
+    maxFilesError: 'Se alcanzó el máximo de archivos permitidos ({max}).',
+    removeFile: 'Eliminar archivo',
+    uploading: 'Subiendo...',
+  },
+  quickAdd: {
+    title: 'Agregar nuevo registro',
+    add: 'Agregar',
   },
 };
 

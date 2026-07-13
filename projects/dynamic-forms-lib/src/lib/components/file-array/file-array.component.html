@@ -1,0 +1,50 @@
+<div class="file-array-container">
+  <label class="file-array-label">{{ field.label }}</label>
+
+  @if (files().length > 0) {
+  <div class="file-list">
+    @for (file of files(); track file.name + $index; let i = $index) {
+    <div class="file-item">
+      <div class="file-preview">
+        @if (isImage(file)) {
+        <img [src]="getPreviewUrl(file)" class="file-thumbnail" [alt]="file.name" />
+        } @else {
+        <div class="file-icon">
+          <mat-icon>{{ getFileIcon(file) }}</mat-icon>
+        </div>
+        }
+      </div>
+      <div class="file-info">
+        <span class="file-name" [matTooltip]="file.name">{{ file.name }}</span>
+        <span class="file-size">{{ formatFileSize(file.size) }}</span>
+      </div>
+      <button mat-icon-button type="button" class="open-btn"
+        matTooltip="Abrir archivo"
+        (click)="openFile(file)">
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="delete-btn"
+        [matTooltip]="t().fileArray.removeFile"
+        (click)="deleteFile(i)">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    }
+  </div>
+  }
+
+  <div class="add-row">
+    <button mat-stroked-button color="primary" type="button"
+      (click)="fileInput.click()">
+      <mat-icon>upload</mat-icon>
+      {{ t().fileArray.addFiles }}
+    </button>
+    <input type="file" #fileInput hidden multiple
+      [accept]="field.accept"
+      (change)="onFileSelected($event)" />
+  </div>
+
+  @if (files().length > 0 && field.maxFiles) {
+  <span class="file-count">{{ files().length }} / {{ field.maxFiles }}</span>
+  }
+</div>

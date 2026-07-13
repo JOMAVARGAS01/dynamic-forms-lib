@@ -132,11 +132,16 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     if (this.showActions()) {
       cols.push({
         headerName: this.t().crud.actions,
+        // Ancho fijo 120px + minWidth 120px evita que AG Grid apriete la
+        // columna pinned cuando hay muchas columnas o el viewport es chico.
+        // resizable: true permite al usuario ajustarla manualmente si el
+        // contenido de los botones requiere más espacio.
         width: 120,
+        minWidth: 120,
         cellRenderer: ActionCellRendererComponent,
         filter: false,
         sortable: false,
-        resizable: false,
+        resizable: true,
         pinned: 'left',
       });
     }

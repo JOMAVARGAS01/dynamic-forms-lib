@@ -59,6 +59,7 @@ export class FormsComponent implements OnInit {
   // groupForms removed to prevent control reparenting issues
   groupEntries: Array<{ group: any; key: string; isLast?: boolean }> = [];
   files = new Map<string, File>();
+  fileArrays = new Map<string, File[]>();
   visibilityMap = signal<Record<string, boolean>>({});
   private cdr = inject(ChangeDetectorRef);
 
@@ -84,6 +85,7 @@ export class FormsComponent implements OnInit {
     this.config.groups.forEach(group => {
       group.fields.forEach(field => {
         if (field.type === 'file') return;
+        if (field.type === 'file-array') return;
 
         if (field.type === 'form-array') {
           // form-array: the control is a FormArray, items are FormGroups built per field
@@ -164,6 +166,8 @@ export class FormsComponent implements OnInit {
           return;
         }
 
+        if (field.type === 'file-array') return;
+
         if (field.type === 'date') {
           patchValue[field.name] = this.parseDate(value);
         } else if (field.type === 'checkbox' || field.type === 'switch') {
@@ -219,6 +223,15 @@ export class FormsComponent implements OnInit {
   /** Registers a file selected by a file input field. */
   onFileChange(event: { name: string; file: File }) {
     this.files.set(event.name, event.file);
+  }
+
+  /** Registers files from a file-array field. */
+  onFileArrayChange(fieldName: string, files: File[]) {
+    if (files.length > 0) {
+      this.fileArrays.set(fieldName, files);
+    } else {
+      this.fileArrays.delete(fieldName);
+    }
   }
 
   // Check if form has any invalid ENABLED controls (visible fields only).
@@ -295,6 +308,12 @@ export class FormsComponent implements OnInit {
 
     this.files.forEach((file, key) => {
       formData.append(key, file);
+    });
+
+    this.fileArrays.forEach((files, key) => {
+      files.forEach((file) => {
+        formData.append(key, file);
+      });
     });
 
     this.formSubmit.emit(formData);

@@ -14,7 +14,8 @@
           </app-form-array>
           } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
-            (fileChange)="onFileChange($event)"></app-field>
+            (fileChange)="onFileChange($event)"
+            (fileArrayChange)="onFileArrayChange(field.name, $event)"></app-field>
           }
         </div>
         }
@@ -45,7 +46,8 @@
           </app-form-array>
           } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
-            (fileChange)="onFileChange($event)"></app-field>
+            (fileChange)="onFileChange($event)"
+            (fileArrayChange)="onFileArrayChange(field.name, $event)"></app-field>
           }
         </div>
         }
@@ -72,7 +74,8 @@
           </app-form-array>
           } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
-            (fileChange)="onFileChange($event)"></app-field>
+            (fileChange)="onFileChange($event)"
+            (fileArrayChange)="onFileArrayChange(field.name, $event)"></app-field>
           }
         </div>
         }
@@ -99,7 +102,8 @@
           </app-form-array>
           } @else {
           <app-field [appearance]="appearance" [field]="field" [form]="form"
-            (fileChange)="onFileChange($event)"></app-field>
+            (fileChange)="onFileChange($event)"
+            (fileArrayChange)="onFileArrayChange(field.name, $event)"></app-field>
           }
         </div>
         }
