@@ -80,6 +80,8 @@ export interface SelectField extends BaseField {
   quickAdd?: {
     resource: string;
     label?: string;
+    /** Full API URL to POST to. If omitted, derived from select field's api.endpoint. */
+    url?: string;
     /** Fields to show in the quick-add dialog. Defaults to [{ name: 'name', label: 'Nombre', required: true }] */
     fields?: Array<{
       name: string;

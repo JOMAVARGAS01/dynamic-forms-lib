@@ -1,30 +1,36 @@
 <h2 mat-dialog-title>{{ data.label || t().quickAdd.title }}</h2>
 <mat-dialog-content>
-  <form [formGroup]="form" class="quick-add-form">
-    @for (field of fields; track field.name) {
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>{{ field.label }}</mat-label>
-      @if (field.type === 'textarea') {
-      <textarea matInput [formControlName]="field.name" [placeholder]="field.placeholder || ''"></textarea>
-      } @else if (field.type === 'number') {
-      <input matInput type="number" [formControlName]="field.name" [placeholder]="field.placeholder || ''" />
-      } @else {
-      <input matInput [formControlName]="field.name" [placeholder]="field.placeholder || ''" cdkFocusInitial />
+  @if (fullFormConfig) {
+    <div class="form-host" #formHost></div>
+  } @else {
+    <form [formGroup]="form" class="quick-add-form">
+      @for (field of fields; track field.name) {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>{{ field.label }}</mat-label>
+        @if (field.type === 'textarea') {
+        <textarea matInput [formControlName]="field.name" [placeholder]="field.placeholder || ''"></textarea>
+        } @else if (field.type === 'number') {
+        <input matInput type="number" [formControlName]="field.name" [placeholder]="field.placeholder || ''" />
+        } @else {
+        <input matInput [formControlName]="field.name" [placeholder]="field.placeholder || ''" cdkFocusInitial />
+        }
+        @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
+        <mat-error>{{ field.label }} es requerido.</mat-error>
+        }
+      </mat-form-field>
       }
-      @if (form.get(field.name)?.invalid && form.get(field.name)?.touched) {
-      <mat-error>{{ field.label }} es requerido.</mat-error>
-      }
-    </mat-form-field>
-    }
-  </form>
+    </form>
+  }
   @if (errorMessage) {
   <div class="error-message">{{ errorMessage }}</div>
   }
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button type="button" (click)="cancel()">{{ t().dialog.cancel }}</button>
+  @if (!fullFormConfig) {
   <button mat-flat-button color="primary" type="button" (click)="submit()"
     [disabled]="form.invalid || isSubmitting">
     {{ t().quickAdd.add }}
   </button>
+  }
 </mat-dialog-actions>

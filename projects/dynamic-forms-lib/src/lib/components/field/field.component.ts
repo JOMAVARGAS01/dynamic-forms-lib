@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FieldConfig, SelectField, BaseField, RenderableFieldConfig, FORM_FIELD_APPEARANCE } from '../../types/dynamic-form.types';
 import { DynamicOptionsService } from '../../services/dynamic-options.service';
+import { FormConfigRegistry } from '../../services/form-config-registry.service';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 import { MatRadioModule } from '@angular/material/radio';
 import { FileArrayComponent } from '../file-array/file-array.component';
@@ -62,6 +63,7 @@ export class FieldComponent implements OnInit {
   private optionsService = inject(DynamicOptionsService);
   private dialog = inject(MatDialog);
   private http = inject(HttpClient);
+  private formConfigRegistry = inject(FormConfigRegistry);
 
   /** Options loaded from a dynamic API source for select/autocomplete fields. */
   apiOptions = signal<Option[]>([]);
@@ -265,12 +267,18 @@ export class FieldComponent implements OnInit {
     const qaConfig = selectField.quickAdd;
     if (!qaConfig) return;
 
+    // Determine the POST URL: explicit quickAdd.url > select field's api.endpoint
+    const postUrl = qaConfig.url ?? (selectField as any).api?.endpoint;
+
+    // Use wider dialog if full form config is registered
+    const hasFullForm = this.formConfigRegistry.get(qaConfig.resource);
     const dialogRef = this.dialog.open(QuickAddDialogComponent, {
-      width: '400px',
+      width: hasFullForm ? '900px' : '400px',
       data: { 
         resource: qaConfig.resource, 
         label: qaConfig.label,
-        fields: qaConfig.fields  // Pass fields config if provided
+        url: postUrl,
+        fields: qaConfig.fields
       },
     });
 

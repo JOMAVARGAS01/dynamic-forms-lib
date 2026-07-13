@@ -1,17 +1,21 @@
-import { Component, inject, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, computed, ViewChild, ViewContainerRef, ComponentRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, Validators, FormGroup } from '@angular/forms';
 import { MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { HttpClient } from '@angular/common/http';
-import { Option } from '../../types/dynamic-form.types';
+import { Option, FormConfig } from '../../types/dynamic-form.types';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
+import { FormConfigRegistry } from '../../services/form-config-registry.service';
 
 export interface QuickAddConfig {
   resource: string;
   label?: string;
+  /** Full API URL to POST to. */
+  url?: string;
   /** Fields to show in the dialog. Defaults to [{ name: 'name', label: 'Nombre', required: true }] */
   fields?: QuickAddField[];
 }
@@ -31,10 +35,13 @@ export interface QuickAddField {
   imports: [
     CommonModule, ReactiveFormsModule,
     MatDialogTitle, MatDialogContent, MatDialogActions,
-    MatFormFieldModule, MatInputModule, MatButtonModule,
+    MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule,
   ],
   templateUrl: './quick-add-dialog.component.html',
   styles: [`
+    :host {
+      display: block;
+    }
     .quick-add-form {
       display: flex;
       flex-direction: column;
@@ -48,20 +55,42 @@ export interface QuickAddField {
       font-size: 12px;
       margin-top: 8px;
     }
+    .form-host {
+      width: 100%;
+    }
+    mat-dialog-content {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
   `],
 })
 /**
  * Inline resource creation dialog. POSTs a new resource to `/{resource}` and
  * returns the created Option on close, or undefined on cancel.
+ *
+ * If a FormConfig is registered for the resource, dynamically creates
+ * FormsComponent to show the full form (avoids circular dependency).
  */
-export class QuickAddDialogComponent {
+export class QuickAddDialogComponent implements AfterViewInit {
   form = new FormGroup({});
   isSubmitting = false;
   errorMessage = '';
   fields: QuickAddField[] = [];
 
+  /** The full FormConfig if registered, otherwise null. */
+  fullFormConfig: FormConfig | null = false as any; // null = not checked yet
+  private formComponentRef: ComponentRef<any> | null = null;
+
+  @ViewChild('formHost', { read: ViewContainerRef }) formHost!: ViewContainerRef;
+
+  /** Resolved POST URL. */
+  private get postUrl(): string {
+    return this.data.url ?? `/${this.data.resource}`;
+  }
+
   private dialogRef = inject(MatDialogRef<QuickAddDialogComponent, Option | undefined>);
   private http = inject(HttpClient);
+  private registry = inject(FormConfigRegistry);
   public data!: QuickAddConfig;
 
   private _translations = inject(DYNAMIC_FORMS_TRANSLATIONS, { optional: true });
@@ -69,7 +98,16 @@ export class QuickAddDialogComponent {
 
   constructor() {
     this.data = inject<QuickAddConfig>(MAT_DIALOG_DATA);
-    
+
+    // Check if a full FormConfig is registered for this resource
+    const registered = this.registry.get(this.data.resource);
+    if (registered) {
+      this.fullFormConfig = registered;
+      return; // Skip simple field setup — form loaded dynamically in ngAfterViewInit
+    }
+
+    this.fullFormConfig = null;
+
     // Default fields if none provided
     this.fields = this.data.fields ?? [
       { name: 'name', label: 'Nombre', type: 'text', required: true }
@@ -87,6 +125,37 @@ export class QuickAddDialogComponent {
     }
   }
 
+  async ngAfterViewInit() {
+    if (this.fullFormConfig && this.formHost) {
+      // Dynamic import to break circular dependency
+      const { FormsComponent } = await import('../forms/forms.component');
+      this.formHost.clear();
+      this.formComponentRef = this.formHost.createComponent(FormsComponent);
+      this.formComponentRef.instance.config = this.fullFormConfig;
+      this.formComponentRef.instance.mode = 'add';
+      this.formComponentRef.instance.formSubmit.subscribe((formData: FormData) => this.onFullFormSubmit(formData));
+      this.formComponentRef.instance.cancel.subscribe(() => this.cancel());
+    }
+  }
+
+  /** Called when FormsComponent emits formSubmit (full form mode). */
+  onFullFormSubmit(formData: FormData) {
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+    this.errorMessage = '';
+
+    this.http.post<Option>(this.postUrl, formData).subscribe({
+      next: (created) => {
+        const nameValue = formData.get('name') || formData.get('Name') || '';
+        this.dialogRef.close({ label: String(created.label ?? nameValue), value: created.value ?? created });
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errorMessage = err?.error?.message ?? 'Error al crear el registro.';
+      },
+    });
+  }
+
   submit() {
     if (this.form.invalid || this.isSubmitting) return;
 
@@ -102,9 +171,8 @@ export class QuickAddDialogComponent {
       }
     }
 
-    this.http.post<Option>(`/${this.data.resource}`, payload).subscribe({
+    this.http.post<Option>(this.postUrl, payload).subscribe({
       next: (created) => {
-        // Return the created option with name as label
         const nameValue = payload['name'] || payload['Name'] || '';
         this.dialogRef.close({ label: created.label ?? nameValue, value: created.value ?? created });
       },

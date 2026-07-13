@@ -85,7 +85,7 @@
         </mat-select>
         @if (hasQuickAdd()) {
         <button matSuffix mat-icon-button type="button" class="quick-add-btn"
-            (click)="openQuickAdd()" matTooltip="Agregar nuevo">
+            (click)="openQuickAdd(); $event.stopPropagation()" matTooltip="Agregar nuevo">
             <mat-icon>add</mat-icon>
         </button>
         }
