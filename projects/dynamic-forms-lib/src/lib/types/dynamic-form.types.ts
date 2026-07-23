@@ -157,6 +157,26 @@ export interface GroupConfig {
   fields: FieldConfig[];
 }
 
+/**
+ * Optional permissions configuration for CrudManagerComponent.
+ * All fields are optional — missing fields default to true (fail-open).
+ * When not provided, CrudManagerComponent behaves exactly as before.
+ */
+export interface CrudPermissions {
+  /** Whether the user can create new records. Shows/hides the Add button. */
+  canCreate?: boolean;
+  /** Whether the user can view records. Controls read-only mode. */
+  canRead?: boolean;
+  /** Whether the user can edit existing records. Shows/hides the Edit button per row. */
+  canUpdate?: boolean;
+  /** Whether the user can delete records. Shows/hides the Delete button per row. */
+  canDelete?: boolean;
+  /** Whether the user can export data. Shows/hides the Export button. */
+  canExport?: boolean;
+  /** When true, all form fields are disabled (readonly mode). */
+  readonly?: boolean;
+}
+
 export interface FormConfig {
   layout?: string;
   groups: GroupConfig[];
@@ -165,6 +185,8 @@ export interface FormConfig {
     linear?: boolean;
     orientation?: 'horizontal' | 'vertical';
   };
+  /** When true, all form fields are disabled. Can be overridden by CrudPermissions.readonly. */
+  readonly?: boolean;
 }
 
 export type FormFieldAppearance = 'fill' | 'outline';
