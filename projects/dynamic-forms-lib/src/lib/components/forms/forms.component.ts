@@ -72,6 +72,9 @@ export class FormsComponent implements OnInit {
       this.patchForm(this.initialData);
     }
     this.setupVisibilityLogic();
+    if (this.config.readonly) {
+      this.form.disable();
+    }
   }
   ngAfterViewInit(): void {
     this.allExpanded = this.initialExpansionState;
