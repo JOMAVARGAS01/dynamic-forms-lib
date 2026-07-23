@@ -3,13 +3,17 @@
     <h2 class="header-title">{{ title }}</h2>
 
     <div class="controls-bar">
+      @if (!resolvedPermissions().readonly && resolvedPermissions().canCreate) {
       <button mat-flat-button (click)="onAdd()">
         <mat-icon>add</mat-icon> {{ t().crud.add }}
       </button>
+      }
 
+      @if (resolvedPermissions().canExport) {
       <button mat-stroked-button (click)="onExport()">
         <mat-icon>download</mat-icon> {{ t().crud.export }}
       </button>
+      }
 
       <div class="search-container">
         <mat-icon class="search-icon">search</mat-icon>

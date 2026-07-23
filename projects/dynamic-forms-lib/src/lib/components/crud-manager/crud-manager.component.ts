@@ -17,7 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { FormsComponent } from '../forms/forms.component';
-import { FormConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN } from '../../types/dynamic-form.types';
+import { FormConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN, CrudPermissions } from '../../types/dynamic-form.types';
 import { ActionCellRendererComponent } from '../action-cell/action-cell.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { HttpClient } from '@angular/common/http';
@@ -72,6 +72,8 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   @Input() responseMapper: (response: any) => any[] = (res) => res;
   /** Whether to show the Edit/Delete action column. */
   showActions = input<boolean>(true);
+  /** Optional permissions configuration. All fields default to true (fail-open). */
+  permissions = input<CrudPermissions | null>(null);
 
   /** Reactive signal holding the current row data displayed in the grid. */
   rowData = signal<any[]>([]);
@@ -95,6 +97,19 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   /** Active AG-Grid CSS theme class, toggled between light and dark variants. */
   agGridTheme = signal('ag-theme-material');
 
+  /** Resolved permissions with fail-open defaults. */
+  resolvedPermissions = computed<Required<CrudPermissions>>(() => {
+    const p = this.permissions();
+    return {
+      canCreate: p?.canCreate ?? true,
+      canRead: p?.canRead ?? true,
+      canUpdate: p?.canUpdate ?? true,
+      canDelete: p?.canDelete ?? true,
+      canExport: p?.canExport ?? true,
+      readonly: p?.readonly ?? false,
+    };
+  });
+
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar) {
     const baseTheme = this.themeService.agGridTheme();
     const isDark = this.themeService.isDarkMode();
@@ -105,6 +120,14 @@ export class CrudManagerComponent implements OnInit, OnChanges {
       const isDark = this.themeService.isDarkMode();
       this.agGridTheme.set(isDark ? `ag-theme-${baseTheme}-dark` : `ag-theme-${baseTheme}`);
       this.cdr.markForCheck();
+    });
+
+    effect(() => {
+      const perms = this.resolvedPermissions();
+      if (this.gridApi) {
+        this.gridOptions.context.permissions = perms;
+        this.gridApi.refreshCells({ force: true });
+      }
     });
   }
 
@@ -129,7 +152,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
    */
   gridColumnDefs = computed<ColDef[]>(() => {
     const cols = [...this.columnDefs()];
-    if (this.showActions()) {
+    if (this.showActions() && !this.resolvedPermissions().readonly) {
       cols.push({
         headerName: this.t().crud.actions,
         // Ancho fijo 120px + minWidth 120px evita que AG Grid apriete la
@@ -277,6 +300,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
 
   /** Opens the sidebar in 'add' mode for creating a new record. */
   onAdd() {
+    if (this.resolvedPermissions().readonly) return;
     this.sidebarService.closeSidebar();
     this.formMode.set('add');
     this.initialData.set(null);
