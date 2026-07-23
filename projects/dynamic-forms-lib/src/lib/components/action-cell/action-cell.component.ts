@@ -28,19 +28,32 @@ export class ActionCellRendererComponent implements ICellRendererAngularComp {
   private params!: ICellRendererParams;
   private cdr = inject(ChangeDetectorRef);
 
+  /** Whether to show the Edit button. Resolved from grid context permissions. */
+  showEdit = true;
+  /** Whether to show the Delete button. Resolved from grid context permissions. */
+  showDelete = true;
+
   private _translations = inject(DYNAMIC_FORMS_TRANSLATIONS, { optional: true });
   t = computed(() => this._translations?.() ?? DEFAULT_TRANSLATIONS);
 
   /** Initializes the cell renderer with AG-Grid parameters. */
   agInit(params: ICellRendererParams): void {
     this.params = params;
+    this.resolvePermissions(params);
   }
 
   /** Refreshes the cell renderer when the cell data changes. Returns true to signal success. */
   refresh(params: ICellRendererParams): boolean {
     this.params = params;
+    this.resolvePermissions(params);
     this.cdr.markForCheck();
     return true;
+  }
+
+  private resolvePermissions(params: ICellRendererParams): void {
+    const perms = params.context?.permissions ?? {};
+    this.showEdit = perms.readonly ? false : (perms.canUpdate ?? true);
+    this.showDelete = perms.readonly ? false : (perms.canDelete ?? true);
   }
 
   /** Triggers the parent component's onEdit method with this row's data. */

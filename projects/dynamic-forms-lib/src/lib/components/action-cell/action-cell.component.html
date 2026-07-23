@@ -1,8 +1,12 @@
 <div class="flex items-center space-x-1 h-full">
+    @if (showEdit) {
     <button mat-icon-button color="primary" (click)="onEditClicked()" [matTooltip]="t().actionCell.edit">
         <mat-icon>edit</mat-icon>
     </button>
+    }
+    @if (showDelete) {
     <button mat-icon-button color="warn" (click)="onDeleteClicked()" [matTooltip]="t().actionCell.delete">
         <mat-icon>delete</mat-icon>
     </button>
+    }
 </div>
