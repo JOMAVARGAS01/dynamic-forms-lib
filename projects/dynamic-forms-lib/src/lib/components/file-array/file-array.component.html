@@ -1,9 +1,43 @@
 <div class="file-array-container">
   <label class="file-array-label">{{ field.label }}</label>
 
-  @if (files().length > 0) {
+  <!-- Archivos existentes (BD) -->
+  @if (existingFiles().length > 0) {
+  <div class="section-label">Guardados</div>
   <div class="file-list">
-    @for (file of files(); track file.name + $index; let i = $index) {
+    @for (f of existingFiles(); track f.id) {
+    <div class="file-item existing">
+      <div class="file-preview">
+        <div class="file-icon">
+          <mat-icon>{{ iconoMime(f.type) }}</mat-icon>
+        </div>
+      </div>
+      <div class="file-info">
+        <span class="file-name" [matTooltip]="f.name" (click)="downloadExisting(f)">{{ f.name }}</span>
+        <span class="file-size">{{ formatFileSize(f.size) }}</span>
+      </div>
+      <button mat-icon-button type="button" class="open-btn"
+        matTooltip="Descargar archivo"
+        (click)="downloadExisting(f)">
+        <mat-icon>download</mat-icon>
+      </button>
+      @if (field.onDeleteExisting) {
+      <button mat-icon-button type="button" class="delete-btn"
+        [matTooltip]="t().fileArray.removeFile"
+        (click)="deleteExisting(f)">
+        <mat-icon>close</mat-icon>
+      </button>
+      }
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Nuevos uploads -->
+  @if (uploads().length > 0) {
+  <div class="section-label">Nuevos</div>
+  <div class="file-list">
+    @for (file of uploads(); track file.name + $index; let i = $index) {
     <div class="file-item">
       <div class="file-preview">
         @if (isImage(file)) {
@@ -25,7 +59,7 @@
       </button>
       <button mat-icon-button type="button" class="delete-btn"
         [matTooltip]="t().fileArray.removeFile"
-        (click)="deleteFile(i)">
+        (click)="deleteUpload(i)">
         <mat-icon>close</mat-icon>
       </button>
     </div>
@@ -44,7 +78,7 @@
       (change)="onFileSelected($event)" />
   </div>
 
-  @if (files().length > 0 && field.maxFiles) {
-  <span class="file-count">{{ files().length }} / {{ field.maxFiles }}</span>
+  @if (totalFiles() > 0 && field.maxFiles) {
+  <span class="file-count">{{ totalFiles() }} / {{ field.maxFiles }}</span>
   }
 </div>

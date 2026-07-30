@@ -1,10 +1,10 @@
-import { Component, Input, Output, EventEmitter, signal, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, ChangeDetectionStrategy, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { FileArrayField } from '../../types/dynamic-form.types';
+import { FileArrayField, ExistingFile } from '../../types/dynamic-form.types';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 
 @Component({
@@ -16,21 +16,36 @@ import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATI
   styleUrls: ['./file-array.component.css'],
 })
 /**
- * Multi-file upload control with thumbnail preview, per-file delete, and progress indicator.
- * Manages files via a signal array; emits the full File[] on every change.
+ * Multi-file upload control with thumbnail preview, per-file delete, and progress.
+ * Now supports existing files from DB alongside new uploads.
  */
 export class FileArrayComponent {
-  /** Field configuration for validation constraints (accept, maxSize, maxFiles). */
   @Input({ required: true }) field!: FileArrayField;
 
   @Output() filesChange = new EventEmitter<File[]>();
 
-  files = signal<File[]>([]);
+  /** Nuevos archivos seleccionados vía input file (no persistidos). */
+  uploads = signal<File[]>([]);
+  /** Archivos existentes desde BD. */
+  existingFiles = signal<ExistingFile[]>([]);
   /** Object URLs keyed by file name for thumbnail preview. */
   previewUrls = signal<Map<string, string>>(new Map());
 
   private _translations = inject(DYNAMIC_FORMS_TRANSLATIONS, { optional: true });
   t = computed(() => this._translations?.() ?? DEFAULT_TRANSLATIONS);
+
+  /** Total de archivos (existentes + uploads). */
+  totalFiles = computed(() => this.existingFiles().length + this.uploads().length);
+
+  constructor() {
+    // React to existingFilesProvider changes
+    effect(() => {
+      const provider = this.field.existingFilesProvider;
+      if (provider) {
+        this.existingFiles.set(provider());
+      }
+    });
+  }
 
   get maxFilesError(): string {
     const max = this.field.maxFiles ?? Infinity;
@@ -41,9 +56,9 @@ export class FileArrayComponent {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
-    const current = this.files();
+    const current = this.uploads();
     const maxFiles = this.field.maxFiles ?? Infinity;
-    const remaining = maxFiles - current.length;
+    const remaining = maxFiles - this.totalFiles();
 
     if (remaining <= 0) {
       input.value = '';
@@ -53,7 +68,6 @@ export class FileArrayComponent {
     const newFiles = Array.from(input.files).slice(0, remaining);
     const updated = [...current, ...newFiles];
 
-    // Create preview URLs for new files
     const urls = new Map(this.previewUrls());
     for (const file of newFiles) {
       if (!urls.has(file.name)) {
@@ -61,18 +75,17 @@ export class FileArrayComponent {
       }
     }
     this.previewUrls.set(urls);
-    this.files.set(updated);
+    this.uploads.set(updated);
     this.filesChange.emit(updated);
 
     input.value = '';
   }
 
-  deleteFile(index: number) {
-    const current = this.files();
+  deleteUpload(index: number) {
+    const current = this.uploads();
     const file = current[index];
     if (!file) return;
 
-    // Revoke object URL
     const urls = this.previewUrls();
     const url = urls.get(file.name);
     if (url) {
@@ -83,20 +96,28 @@ export class FileArrayComponent {
     }
 
     const updated = current.filter((_, i) => i !== index);
-    this.files.set(updated);
+    this.uploads.set(updated);
     this.filesChange.emit(updated);
+  }
+
+  /** Delegado: eliminar archivo existente via callback. */
+  deleteExisting(file: ExistingFile) {
+    this.field.onDeleteExisting?.(file.id);
+  }
+
+  /** Delegado: descargar/abrir archivo existente via callback. */
+  downloadExisting(file: ExistingFile) {
+    this.field.onDownloadExisting?.(file.id);
   }
 
   getPreviewUrl(file: File): string {
     return this.previewUrls().get(file.name) ?? '';
   }
 
-  /** Check if file is an image based on MIME type */
   isImage(file: File): boolean {
     return file.type.startsWith('image/');
   }
 
-  /** Get icon name based on file type */
   getFileIcon(file: File): string {
     const type = file.type;
     if (type.includes('pdf')) return 'picture_as_pdf';
@@ -106,7 +127,15 @@ export class FileArrayComponent {
     return 'insert_drive_file';
   }
 
-  /** Format file size to human readable */
+  /** Icono para archivo existente (por MIME type). */
+  iconoMime(mime: string): string {
+    if (mime.includes('pdf')) return 'picture_as_pdf';
+    if (mime.includes('image')) return 'image';
+    if (mime.includes('word') || mime.includes('document')) return 'description';
+    if (mime.includes('excel') || mime.includes('sheet')) return 'table_chart';
+    return 'insert_drive_file';
+  }
+
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -115,7 +144,6 @@ export class FileArrayComponent {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  /** Open file in a new tab */
   openFile(file: File) {
     const url = this.previewUrls().get(file.name);
     if (url) window.open(url, '_blank');

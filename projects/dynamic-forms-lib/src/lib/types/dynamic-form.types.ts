@@ -141,6 +141,20 @@ export interface FileArrayField extends BaseField {
   maxSize?: number;
   maxFiles?: number;
   uploadUrl?: string;
+  /** Provider function that returns existing files to display alongside new uploads. */
+  existingFilesProvider?: () => ExistingFile[];
+  /** Callback cuando se solicita eliminar un archivo existente. Recibe el id. */
+  onDeleteExisting?: (id: number) => void;
+  /** Callback cuando se solicita descargar/abrir un archivo existente. Recibe el id. */
+  onDownloadExisting?: (id: number) => void;
+}
+
+/** Archivo ya guardado en BD, mostrado junto a los nuevos uploads. */
+export interface ExistingFile {
+  id: number;
+  name: string;
+  size: number;
+  type: string;
 }
 
 export type FieldConfig = SelectField | TextField | BaseField | FormArrayField | FileArrayField;

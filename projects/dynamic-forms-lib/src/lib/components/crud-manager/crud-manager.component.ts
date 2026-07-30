@@ -66,6 +66,8 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   @Input() createUrl?: string;
   /** Optional custom URL or function returning the URL for updating records. Falls back to apiUrl/{id}. */
   @Input() updateUrl?: string | ((data: any) => string);
+  /** Optional custom URL or function returning the URL for fetching detail on edit. Falls back to using grid row data. */
+  @Input() editUrl?: string | ((data: any) => string);
   /** Optional function returning the delete URL for a given record. Falls back to apiUrl/{id}. */
   @Input() deleteUrl?: (data: any) => string;
   /** Transforms the raw API response into the row data array. */
@@ -311,8 +313,24 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   onEdit(data: any) {
     this.sidebarService.closeSidebar();
     this.formMode.set('edit');
-    this.initialData.set(data);
-    this.isFormOpen.set(true);
+
+    if (this.editUrl) {
+      const url = typeof this.editUrl === 'function' ? this.editUrl(data) : this.editUrl;
+      this.http.get<any>(url).subscribe({
+        next: (res) => {
+          const detail = this.responseMapper(res);
+          this.initialData.set(Array.isArray(detail) ? detail[0] ?? data : detail ?? data);
+          this.isFormOpen.set(true);
+        },
+        error: () => {
+          this.initialData.set(data);
+          this.isFormOpen.set(true);
+        }
+      });
+    } else {
+      this.initialData.set(data);
+      this.isFormOpen.set(true);
+    }
   }
 
   /** Deletes a record after confirmation. Uses deleteUrl function or falls back to apiUrl/{id}. */
@@ -348,9 +366,9 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   }
 
   /** Handles form submission from the sidebar. Sends POST (add) or PUT (edit) to the API. */
-  handleSubmit(formData: FormData) {
+  async handleSubmit(formData: FormData) {
     const mode = this.formMode();
-    const body = this.buildRequestBody(formData, mode);
+    const body = await this.buildRequestBody(formData, mode);
 
     if (mode === 'add') {
       this.executeRequest('post', this.createUrl || this.apiUrl, body, 'addSuccess', 'addError');
@@ -372,38 +390,58 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Prepares the request body from FormData. Returns the FormData as-is
-   * when it contains files (multipart upload); otherwise returns a plain
-   * object for JSON submission. In 'add' mode, also generates the next
-   * sequential numeric ID and appends it to the JSON body.
+   * Prepares the request body from FormData. Always returns a JSON object.
+   * File-array fields are converted to base64 arrays: [{ name, size, type, base64 }, ...].
+   * Single files are converted to { name, size, type, base64 }.
    */
-  private buildRequestBody(formData: FormData, mode: 'add' | 'edit'): FormData | Record<string, any> {
-    let hasFiles = false;
-    formData.forEach((value) => {
-      if (value instanceof File) hasFiles = true;
+  private async buildRequestBody(formData: FormData, mode: 'add' | 'edit'): Promise<Record<string, any>> {
+    // Agrupar valores: detectar keys con múltiples Files (file-array)
+    const entries = new Map<string, any[]>();
+    formData.forEach((value, key) => {
+      if (!entries.has(key)) entries.set(key, []);
+      entries.get(key)!.push(value);
     });
 
     const data: Record<string, any> = {};
-    formData.forEach((value, key) => {
-      if (!(value instanceof File)) {
-        data[key] = value;
-      }
-    });
 
-    if (mode === 'add') {
-      // Manual ID generation for numeric consistency
-      const currentRows = this.rowData();
-      let maxId = 0;
-      currentRows.forEach(row => {
-        const idNum = Number(row.id);
-        if (!isNaN(idNum) && idNum > maxId) {
-          maxId = idNum;
-        }
-      });
-      data['id'] = (maxId + 1).toString();
+    for (const [key, values] of entries) {
+      if (values.length > 0 && values[0] instanceof File) {
+        // File-array: convertir cada File a base64
+        const fileObjs = await Promise.all(
+          values.map(async (f: File) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+            base64: await this.fileToBase64(f),
+          }))
+        );
+        data[key] = fileObjs;
+      } else {
+        data[key] = values[0];
+      }
     }
 
-    return hasFiles ? formData : data;
+    if (mode === 'add') {
+      // Remove legacy ID generation for backends that auto-assign
+      delete data['id'];
+    }
+
+    return data;
+  }
+
+  /** Convierte un File a base64 string (sin prefijo data:). */
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Quitar prefijo "data:image/png;base64,"
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.substring(comma + 1) : result);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   }
 
   /**
