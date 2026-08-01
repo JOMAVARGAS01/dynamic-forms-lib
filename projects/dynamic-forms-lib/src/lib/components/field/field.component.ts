@@ -20,6 +20,7 @@ import { DynamicOptionsService } from '../../services/dynamic-options.service';
 import { FormConfigRegistry } from '../../services/form-config-registry.service';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatTimepickerModule } from '@angular/material/timepicker';
 import { FileArrayComponent } from '../file-array/file-array.component';
 import { QuickAddDialogComponent } from '../quick-add-dialog/quick-add-dialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -37,7 +38,7 @@ type Option = { label: string, value: any };
     MatSlideToggleModule, MatDatepickerModule, MatNativeDateModule,
     MatOptionModule, MatButtonModule, MatProgressSpinnerModule,
     MatAutocompleteModule, MatIconModule, MatTooltipModule, MatRadioModule,
-    FileArrayComponent, MatDialogModule
+    MatTimepickerModule, FileArrayComponent, MatDialogModule
   ],
   styleUrls: ['./field.component.css'],
   templateUrl: './field.component.html'
@@ -85,6 +86,52 @@ export class FieldComponent implements OnInit {
 
   ngOnInit() {
     this.setupDynamicOptions();
+    this.setupTimeField();
+  }
+
+  // ── Time field: matTimepicker usa [value]=Date, no [formControl] ──
+
+  /** Date value for matTimepicker binding. Synced with FormControl. */
+  timeValue = signal<Date>(new Date(0, 0, 0, 0, 0));
+
+  private setupTimeField(): void {
+    if (this.field.type !== 'time') return;
+    const control = this.form.get(this.field.name);
+    if (!control) return;
+
+    // Initial: FormControl string → Date
+    const initial = control.value;
+    if (typeof initial === 'string' && initial.includes(':')) {
+      this.timeValue.set(this._parseTime(initial));
+    }
+
+    // FormControl changes (e.g., patchValue from grid data) → Date
+    control.valueChanges.pipe(distinctUntilChanged()).subscribe(val => {
+      if (typeof val === 'string' && val.includes(':')) {
+        this.timeValue.set(this._parseTime(val));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  /** User selected a time → Date → "HH:mm:ss" string → FormControl. */
+  onTimeValueChange(val: Date) {
+    const control = this.form.get(this.field.name);
+    if (!control) return;
+    const hh = String(val.getHours()).padStart(2, '0');
+    const mm = String(val.getMinutes()).padStart(2, '0');
+    control.setValue(`${hh}:${mm}:00`, { emitEvent: false });
+    this.timeValue.set(val);
+    control.markAsTouched();
+    control.markAsDirty();
+    this.cdr.markForCheck();
+  }
+
+  /** "HH:mm:ss" → Date using local hours (timezone-safe for display). */
+  private _parseTime(time: string): Date {
+    const [h, m] = time.split(':').map(Number);
+    const d = new Date(0, 0, 0, h, m);
+    return d;
   }
 
   private setupDynamicOptions() {
@@ -355,6 +402,6 @@ export class FieldComponent implements OnInit {
 
   /** Whether the given field type should render as a standard HTML input (text, email, password, etc.). */
   isSimpleInput(type: string): boolean {
-    return ['text', 'email', 'password', 'tel', 'url', 'number', 'color', 'time', 'week', 'month', 'textarea'].includes(type);
+    return ['text', 'email', 'password', 'tel', 'url', 'number', 'color', 'week', 'month', 'textarea'].includes(type);
   }
 }

@@ -81,7 +81,7 @@ export class VehiclesPageComponent {
             label: 'Mileage',
             name: 'mileage',
             gridCols: 6,
-            suffix: { text: 'km', isIcon: false }
+            suffix: { icon: '', text: 'km', isIcon: false }
           },
           {
             type: 'switch',

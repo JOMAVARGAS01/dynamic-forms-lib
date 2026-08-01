@@ -1,4 +1,5 @@
 <ng-container [formGroup]="form">
+    @if (!field.hidden) {
     @if (isSimpleInput(field.type)) {
     <mat-form-field [appearance]="appearance" class="full-width">
         <mat-label>{{field.label}}</mat-label>
@@ -17,28 +18,27 @@
 
         @switch (field.type) {
         @case ('textarea') {
-        <textarea matInput [formControlName]="field.name"></textarea>
+        <textarea matInput [formControlName]="field.name" [readonly]="field.readonly"></textarea>
         }
-        @case ('text') { <input matInput [formControlName]="field.name" /> }
-        @case ('email') { <input matInput type="email" [formControlName]="field.name" /> }
-        @case ('number') { <input matInput type="number" [formControlName]="field.name" /> }
+        @case ('text') { <input matInput [formControlName]="field.name" [readonly]="field.readonly" /> }
+        @case ('email') { <input matInput type="email" [formControlName]="field.name" [readonly]="field.readonly" /> }
+        @case ('number') { <input matInput type="number" [formControlName]="field.name" [readonly]="field.readonly" /> }
         @case ('password') {
-        <input matInput [type]="hidePassword() ? 'password' : 'text'" [formControlName]="field.name" />
+        <input matInput [type]="hidePassword() ? 'password' : 'text'" [formControlName]="field.name" [readonly]="field.readonly" />
         <button matSuffix mat-icon-button type="button" (click)="togglePasswordVisibility($event)"
             [attr.aria-label]="hidePassword() ? 'Mostrar contraseña' : 'Ocultar contraseña'" tabindex="-1">
             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
         </button>
         }
-        @case ('tel') { <input matInput type="tel" [formControlName]="field.name" /> }
-        @case ('url') { <input matInput type="url" [formControlName]="field.name" /> }
+        @case ('tel') { <input matInput type="tel" [formControlName]="field.name" [readonly]="field.readonly" /> }
+        @case ('url') { <input matInput type="url" [formControlName]="field.name" [readonly]="field.readonly" /> }
         @case ('color') {
-        <input matInput type="color" [formControlName]="field.name"
+        <input matInput type="color" [formControlName]="field.name" [readonly]="field.readonly"
             style="width: 50px; padding: 0; border: none; background: none; cursor: pointer;" />
         }
-        @case ('time') { <input matInput type="time" [formControlName]="field.name" /> }
-        @case ('week') { <input matInput type="week" [formControlName]="field.name" /> }
-        @case ('month') { <input matInput type="month" [formControlName]="field.name" /> }
-        @default { <input matInput [type]="field.type" [formControlName]="field.name" /> }
+        @case ('week') { <input matInput type="week" [formControlName]="field.name" [readonly]="field.readonly" /> }
+        @case ('month') { <input matInput type="month" [formControlName]="field.name" [readonly]="field.readonly" /> }
+        @default { <input matInput [type]="field.type" [formControlName]="field.name" [readonly]="field.readonly" /> }
         }
 
         <!-- Suffix -->
@@ -63,16 +63,28 @@
     @case ('date') {
     <mat-form-field [appearance]="appearance" class="full-width">
         <mat-label>{{field.label}}</mat-label>
-        <input matInput [matDatepicker]="picker" [formControlName]="field.name" />
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <input matInput [matDatepicker]="picker" [formControlName]="field.name" [readonly]="field.readonly" />
+        <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="!!field.readonly"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
+        @if (hasError()) { <mat-error>{{getErrorMessage()}}</mat-error> }
+    </mat-form-field>
+    }
+    @case ('time') {
+    <mat-form-field [appearance]="appearance" class="full-width">
+        <mat-label>{{field.label}}</mat-label>
+        <input matInput [matTimepicker]="timepicker"
+          [value]="timeValue()"
+          (valueChange)="onTimeValueChange($event)"
+          [readonly]="field.readonly" />
+        <mat-timepicker-toggle matIconSuffix [for]="timepicker" [disabled]="!!field.readonly" />
+        <mat-timepicker #timepicker [interval]="field.timeInterval || '60min'" />
         @if (hasError()) { <mat-error>{{getErrorMessage()}}</mat-error> }
     </mat-form-field>
     }
     @case ('select') {
     <mat-form-field [appearance]="appearance" class="full-width">
         <mat-label>{{field.label}}</mat-label>
-        <mat-select [formControlName]="field.name">
+        <mat-select [formControlName]="field.name" [disabled]="!!field.readonly">
             @if (isLoadingOptions()) {
             <mat-option disabled class="loading-option">
                 <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
@@ -95,7 +107,7 @@
     @case ('autocomplete') {
     <mat-form-field [appearance]="appearance" class="full-width">
         <mat-label>{{field.label}}</mat-label>
-        <input matInput [formControlName]="field.name" [matAutocomplete]="auto" />
+        <input matInput [formControlName]="field.name" [matAutocomplete]="auto" [readonly]="field.readonly" />
         @if (form.get(field.name)?.value) {
         <button matSuffix mat-icon-button type="button" aria-label="Limpiar"
             (click)="form.get(field.name)?.reset()">
@@ -147,7 +159,7 @@
     }
     @case ('checkbox') {
     <div class="full-width checkbox-container">
-        <mat-checkbox [formControlName]="field.name">{{field.label}}</mat-checkbox>
+        <mat-checkbox [formControlName]="field.name" [disabled]="!!field.readonly">{{field.label}}</mat-checkbox>
     </div>
     }
     @case ('checkbox-multiple') {
@@ -155,7 +167,7 @@
         <div class="option-item">
             <label class="field-label">{{ field.label }}</label>
             @for (opt of allOptions(); track opt.value) {
-            <mat-checkbox [checked]="form.get(field.name)?.value?.includes(opt.value)"
+            <mat-checkbox [checked]="form.get(field.name)?.value?.includes(opt.value)" [disabled]="!!field.readonly"
                 (change)="onToggleCheckboxMultiple(field.name, opt.value, $event.checked)">
                 {{ opt.label }}
             </mat-checkbox>
@@ -169,8 +181,7 @@
         <div class="option-item">
             <label class="field-label">{{ field.label }}</label>
 
-            <mat-radio-group [formControlName]="field.name" (matRadioChange)="markRadioAsTouched(field.name)">
-
+            <mat-radio-group [formControlName]="field.name" [disabled]="!!field.readonly" (matRadioChange)="markRadioAsTouched(field.name)">
                 @for (opt of allOptions(); track opt.value) {
                 <mat-radio-button [value]="opt.value">
                     {{ opt.label }}
@@ -187,7 +198,7 @@
     }
     @case ('switch') {
     <div class="full-width checkbox-container">
-        <mat-slide-toggle [formControlName]="field.name"
+        <mat-slide-toggle [formControlName]="field.name" [disabled]="!!field.readonly"
             (change)="onSwitchChange($event)">{{field.label}}</mat-slide-toggle>
     </div>
     }
@@ -195,6 +206,7 @@
     <div class="unsupported-field">
         Tipo de campo '{{field.type}}' no soportado o no implementado.
     </div>
+    }
     }
     }
     }

@@ -47,6 +47,15 @@ export interface BaseField {
   options?: Option[];
   value?: any;
   readonly?: boolean;
+  /** When true, the field is not rendered in the DOM but its FormControl value
+   *  is still included in the form payload on submit. Useful for rowVersion,
+   *  internal IDs, and other data that must travel with the request but should
+   *  not be visible to the user. */
+  hidden?: boolean;
+  /** For time fields only. Controls the interval between selectable options in
+   *  the mat-timepicker. Accepts values like "60min", "30min", "1h", "3.5h".
+   *  Defaults to "60min" (full hours only). */
+  timeInterval?: string;
   prefix?: {
     icon: string;
     text?: string;
