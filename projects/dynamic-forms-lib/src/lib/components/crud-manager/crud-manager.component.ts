@@ -20,6 +20,7 @@ import { FormsComponent } from '../forms/forms.component';
 import { FormConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN, CrudPermissions } from '../../types/dynamic-form.types';
 import { ActionCellRendererComponent } from '../action-cell/action-cell.component';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { HttpClient } from '@angular/common/http';
 import * as ExcelJS from 'exceljs';
 import { SidebarService } from '../../services/sidebar.service';
@@ -44,7 +45,8 @@ ModuleRegistry.registerModules([AllCommunityModule, CsvExportModule]);
     MatFormFieldModule,
     MatInputModule,
     MatCardModule,
-    MatChipsModule
+    MatChipsModule,
+    MatProgressBarModule,
   ],
   styleUrls: ['./crud-manager.component.css'],
   templateUrl: './crud-manager.component.html',
@@ -81,6 +83,8 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   rowData = signal<any[]>([]);
   /** Whether the form sidebar is currently open. */
   isFormOpen = signal<boolean>(false);
+  /** Whether data is currently loading. Toggles the indeterminate progress bar. */
+  loading = signal<boolean>(false);
   /** Current form mode: 'add' for new records, 'edit' for existing ones. */
   formMode = signal<'add' | 'edit'>('add');
   /** Initial data payload when editing a record. null for new records. */
@@ -186,16 +190,19 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   private loadData() {
     if (!this.apiUrl) return;
 
+    this.loading.set(true);
     this.http.get<any>(this.apiUrl)
       .subscribe({
         next: (data) => {
           const mappedData = this.responseMapper(data);
           this.rowData.set(mappedData);
+          this.loading.set(false);
           this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error cargando datos', err);
           this.rowData.set([]);
+          this.loading.set(false);
           this.cdr.markForCheck();
         }
       });

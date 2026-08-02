@@ -6,21 +6,27 @@
   width: 100%;
   padding: 10px 32px 8px 32px;
   border-radius: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--mat-sys-outline-variant, #ccc);
   font-size: 14px;
   box-sizing: border-box;
-  background-color: #f9f9f9;
+  background-color: var(--mat-sys-surface-container-highest, #f9f9f9);
+  color: var(--mat-sys-on-surface, #1c1b1f);
+}
+
+.search-container input::placeholder {
+  color: var(--mat-sys-on-surface-variant, #888);
 }
 
 .search-container input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  border-color: var(--mat-sys-primary, #007bff);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--mat-sys-primary, #007bff) 50%, transparent);
 }
 
 .search-container input:disabled {
-  background-color: #eee;
+  background-color: var(--mat-sys-surface-container, #eee);
   cursor: not-allowed;
+  color: var(--mat-sys-on-surface, #888);
 }
 
 .search-icon {
@@ -29,7 +35,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 24px;
-  color: #888;
+  color: var(--mat-sys-on-surface-variant, #888);
   pointer-events: none;
 }
 
@@ -43,12 +49,12 @@
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
-  color: #888;
+  color: var(--mat-sys-on-surface-variant, #888);
   padding: 0;
 }
 
 .clear-btn:hover {
-  color: #333;
+  color: var(--mat-sys-on-surface, #333);
 }
 
 .crud-manager-container {
@@ -81,6 +87,8 @@
   height: 400px;
   margin-top: 0rem;
 }
+
+.progress { margin-bottom: 8px; border-radius: 8px; }
 
 .custom-modal-overlay {
   position: fixed;

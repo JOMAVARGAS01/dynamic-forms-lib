@@ -1,6 +1,6 @@
 {
   "name": "@dynamic-forms-lib/core",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Enterprise CRUD screens with JSON config — AG Grid, dynamic Angular Material forms, Excel export, and theming",
   "module": "fesm2022/dynamic-forms-lib-core.mjs",
   "types": "index.d.ts",
