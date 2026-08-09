@@ -1,0 +1,23 @@
+<button
+  mat-icon-button
+  type="button"
+  [matMenuTriggerFor]="menu"
+  [disabled]="!gridApi"
+  [matTooltip]="tooltip"
+  [attr.aria-label]="tooltip">
+  <mat-icon>view_column</mat-icon>
+</button>
+
+<mat-menu #menu="matMenu" panelClass="ag-columns-menu-panel" (opened)="onMenuOpened()">
+  <div class="ag-columns-menu__list">
+    @for (item of visibleColumns(); track item.id) {
+      <mat-checkbox
+        class="ag-columns-menu__item"
+        [checked]="item.visible"
+        [disabled]="isLastVisible(item)"
+        (change)="toggle(item.id, $event.checked)">
+        {{ item.label }}
+      </mat-checkbox>
+    }
+  </div>
+</mat-menu>

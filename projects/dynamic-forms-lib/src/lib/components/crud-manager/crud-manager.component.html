@@ -15,6 +15,12 @@
       </button>
       }
 
+      <app-ag-grid-columns-menu
+        [gridApi]="gridApi"
+        [columns]="gridColumnDefs()"
+        [excludeColumnIds]="['actions']"
+        [tooltip]="t().crud.columnsVisibility" />
+
       <div class="search-container">
         <mat-icon class="search-icon">search</mat-icon>
         <input type="text" [placeholder]="t().crud.search" (input)="onQuickFilter($event)" #searchInput>

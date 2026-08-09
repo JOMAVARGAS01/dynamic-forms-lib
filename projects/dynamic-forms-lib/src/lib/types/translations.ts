@@ -6,6 +6,7 @@ export interface DynamicFormsTranslations {
     export: string;
     search: string;
     actions: string;
+    columnsVisibility: string;
     confirmDelete: string;
     deleteSuccess: string;
     deleteError: string;
@@ -71,6 +72,7 @@ export const DEFAULT_TRANSLATIONS: DynamicFormsTranslations = {
     export: 'Exportar',
     search: 'Buscar...',
     actions: 'Acciones',
+    columnsVisibility: 'Columnas visibles',
     confirmDelete: '¿Está seguro de que desea eliminar este registro?',
     deleteSuccess: '✅ Registro eliminado con éxito.',
     deleteError: '❌ Error al eliminar el registro.',

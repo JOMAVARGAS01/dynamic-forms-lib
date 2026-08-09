@@ -6,6 +6,7 @@ export * from './lib/components/file-array/file-array.component';
 export * from './lib/components/confirmation-dialog/confirmation-dialog.component';
 export * from './lib/components/quick-add-dialog/quick-add-dialog.component';
 export * from './lib/components/action-cell/action-cell.component';
+export * from './lib/components/ag-grid-columns-menu/ag-grid-columns-menu.component';
 export * from './lib/services/dynamic-options.service';
 export * from './lib/services/form-config-registry.service';
 export * from './lib/services/theme.service';

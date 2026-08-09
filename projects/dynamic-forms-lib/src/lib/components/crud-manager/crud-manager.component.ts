@@ -19,6 +19,7 @@ import { MatCardModule } from '@angular/material/card';
 import { FormsComponent } from '../forms/forms.component';
 import { FormConfig, FormFieldAppearance, FORM_FIELD_APPEARANCE_TOKEN, CrudPermissions } from '../../types/dynamic-form.types';
 import { ActionCellRendererComponent } from '../action-cell/action-cell.component';
+import { AgGridColumnsMenuComponent } from '../ag-grid-columns-menu/ag-grid-columns-menu.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { HttpClient } from '@angular/common/http';
@@ -47,6 +48,7 @@ ModuleRegistry.registerModules([AllCommunityModule, CsvExportModule]);
     MatCardModule,
     MatChipsModule,
     MatProgressBarModule,
+    AgGridColumnsMenuComponent,
   ],
   styleUrls: ['./crud-manager.component.css'],
   templateUrl: './crud-manager.component.html',
@@ -98,7 +100,8 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   /** Initial data payload when editing a record. null for new records. */
   initialData = signal<any | null>(null);
 
-  private gridApi!: GridApi;
+  /** Referencia a la GridApi de AG Grid (se asigna en onGridReady). */
+  gridApi!: GridApi;
   private http = inject(HttpClient);
   private sidebarService = inject(SidebarService);
   protected themeService = inject(ThemeService);
@@ -168,6 +171,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     const cols = [...this.columnDefs()];
     if (this.showActions() && !this.resolvedPermissions().readonly) {
       cols.push({
+        colId: 'actions',
         headerName: this.t().crud.actions,
         // Ancho fijo 120px + minWidth 120px evita que AG Grid apriete la
         // columna pinned cuando hay muchas columnas o el viewport es chico.
