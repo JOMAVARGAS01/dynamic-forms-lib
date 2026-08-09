@@ -9,20 +9,14 @@
     </div>
 
     @if (formArray && formArray.length > 0) {
-    <mat-accordion class="form-array-items" multi>
+    <div class="form-array-items">
         @for (item of formArray.controls; track trackItem($index, $any(item)); let i = $index) {
-        <mat-expansion-panel [expanded]="true" class="form-array-item">
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    {{ itemTitle(i, $any(item)) }}
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-
-            <div class="fields-grid form-array-item-fields">
+        <div class="form-array-item">
+            <div class="form-array-item-fields">
                 @for (innerField of field.fields; track innerField.name) {
                 @if (innerField.type !== 'file' && innerField.type !== 'form-array') {
                 @if (isFieldVisible(i, innerField.name)) {
-                <div [style.grid-column]="'span ' + (innerField.gridCols || 12)">
+                <div [style.flex]="'1 1 ' + ((innerField.gridCols || 12) * 8) + '%'">
                     <app-field [appearance]="appearance" [field]="innerField" [form]="$any(item)">
                     </app-field>
                 </div>
@@ -30,17 +24,13 @@
                 }
                 }
             </div>
-
-            <mat-action-row>
-                <button matButton="text" color="warn" type="button" (click)="removeItem(i)"
-                    [attr.aria-label]="field.removeButtonLabel || t().formArray.removeItem">
-                    <mat-icon>delete</mat-icon>
-                    {{ field.removeButtonLabel || t().formArray.removeItem }}
-                </button>
-            </mat-action-row>
-        </mat-expansion-panel>
+            <button mat-icon-button color="warn" type="button" class="remove-button"
+                (click)="removeItem(i)" [attr.aria-label]="field.removeButtonLabel || t().formArray.removeItem">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </div>
         }
-    </mat-accordion>
+    </div>
     }
 
     @if (minItemsError) {
