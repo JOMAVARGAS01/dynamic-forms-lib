@@ -2,7 +2,12 @@
     @if (!field.hidden) {
     @if (isSimpleInput(field.type)) {
     <mat-form-field [appearance]="appearance" class="full-width">
-        <mat-label>{{field.label}}</mat-label>
+        <mat-label>
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-label>
 
         <!-- Prefix -->
         @if (field.prefix) {
@@ -62,7 +67,12 @@
 
     @case ('date') {
     <mat-form-field [appearance]="appearance" class="full-width">
-        <mat-label>{{field.label}}</mat-label>
+        <mat-label>
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-label>
         <input matInput [matDatepicker]="picker" [formControlName]="field.name" [readonly]="field.readonly" />
         <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="!!field.readonly"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
@@ -71,7 +81,12 @@
     }
     @case ('time') {
     <mat-form-field [appearance]="appearance" class="full-width">
-        <mat-label>{{field.label}}</mat-label>
+        <mat-label>
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-label>
         <input matInput [matTimepicker]="timepicker"
           [value]="timeValue()"
           (valueChange)="onTimeValueChange($event)"
@@ -83,7 +98,12 @@
     }
     @case ('select') {
     <mat-form-field [appearance]="appearance" class="full-width">
-        <mat-label>{{field.label}}</mat-label>
+        <mat-label>
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-label>
         <mat-select [formControlName]="field.name" [disabled]="!!field.readonly">
             @if (isLoadingOptions()) {
             <mat-option disabled class="loading-option">
@@ -106,7 +126,12 @@
     }
     @case ('autocomplete') {
     <mat-form-field [appearance]="appearance" class="full-width">
-        <mat-label>{{field.label}}</mat-label>
+        <mat-label>
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-label>
         <input matInput [formControlName]="field.name" [matAutocomplete]="auto" [readonly]="field.readonly" />
         @if (form.get(field.name)?.value) {
         <button matSuffix mat-icon-button type="button" aria-label="Limpiar"
@@ -159,13 +184,23 @@
     }
     @case ('checkbox') {
     <div class="full-width checkbox-container">
-        <mat-checkbox [formControlName]="field.name" [disabled]="!!field.readonly">{{field.label}}</mat-checkbox>
+        <mat-checkbox [formControlName]="field.name" [disabled]="!!field.readonly">
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-checkbox>
     </div>
     }
     @case ('checkbox-multiple') {
     <div class="option-group">
         <div class="option-item">
-            <label class="field-label">{{ field.label }}</label>
+            <label class="field-label">
+                @if (field.readonly) {
+                <mat-icon class="readonly-lock" inline>lock</mat-icon>
+                }
+                {{ field.label }}
+            </label>
             @for (opt of allOptions(); track opt.value) {
             <mat-checkbox [checked]="form.get(field.name)?.value?.includes(opt.value)" [disabled]="!!field.readonly"
                 (change)="onToggleCheckboxMultiple(field.name, opt.value, $event.checked)">
@@ -179,7 +214,12 @@
     @case ('radio') {
     <div class="option-group" [ngClass]="{'invalid': hasError()}">
         <div class="option-item">
-            <label class="field-label">{{ field.label }}</label>
+            <label class="field-label">
+                @if (field.readonly) {
+                <mat-icon class="readonly-lock" inline>lock</mat-icon>
+                }
+                {{ field.label }}
+            </label>
 
             <mat-radio-group [formControlName]="field.name" [disabled]="!!field.readonly" (matRadioChange)="markRadioAsTouched(field.name)">
                 @for (opt of allOptions(); track opt.value) {
@@ -199,7 +239,12 @@
     @case ('switch') {
     <div class="full-width checkbox-container">
         <mat-slide-toggle [formControlName]="field.name" [disabled]="!!field.readonly"
-            (change)="onSwitchChange($event)">{{field.label}}</mat-slide-toggle>
+            (change)="onSwitchChange($event)">
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-slide-toggle>
     </div>
     }
     @default {

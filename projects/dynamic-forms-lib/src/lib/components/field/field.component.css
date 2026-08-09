@@ -43,3 +43,23 @@
   margin-top: 4px;
 }
 
+/* ── Readonly visual: aspecto deshabilitado theme-aware (Material 3) ── */
+
+/* Inputs readonly: texto gris + cursor default.
+   !important para ganar al estado focus de Material (mat-focused cambia el
+   color del texto); el token --mat-sys-on-surface-variant responde al tema
+   claro/oscuro automáticamente. */
+input[readonly],
+textarea[readonly] {
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.54)) !important;
+  cursor: default;
+}
+
+/* Candado junto al label de campos readonly (mat-icon lock) */
+.readonly-lock {
+  vertical-align: middle;
+  font-size: inherit;
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.54));
+  margin-right: 4px;
+}
+
