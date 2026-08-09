@@ -72,6 +72,14 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   @Input() editUrl?: string | ((data: any) => string);
   /** Optional function returning the delete URL for a given record. Falls back to apiUrl/{id}. */
   @Input() deleteUrl?: (data: any) => string;
+  /**
+   * Optional async hook ejecutado antes del PUT (modo edición), tras construir
+   * el body y resolver la URL. Recibe el body mutable y el registro actual
+   * (initialData). Devuelve false para CANCELAR el guardado (sin request);
+   * true para continuar. Útil para confirmaciones con datos extra (p.ej. un
+   * motivo obligatorio) que se agregan al body antes del request.
+   */
+  @Input() beforeUpdate?: (body: Record<string, any>, currentData: any) => Promise<boolean> | boolean;
   /** Transforms the raw API response into the row data array. */
   @Input() responseMapper: (response: any) => any[] = (res) => res;
   /** Whether to show the Edit/Delete action column. */
@@ -391,6 +399,13 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     if (!url) {
       this.showSnack('missingUpdateUrlError');
       return;
+    }
+
+    // Hook opcional antes del PUT: permite al host confirmar/agregar datos
+    // (p.ej. motivo obligatorio) o cancelar el guardado (devuelve false).
+    if (this.beforeUpdate) {
+      const proceed = await this.beforeUpdate(body, currentData);
+      if (!proceed) return;
     }
 
     this.executeRequest('put', url, body, 'updateSuccess', 'updateError');
