@@ -37,7 +37,7 @@ export interface ApiConfig {
   queryParam?: string;
 }
 
-export interface Option { label: string; value: any }
+export interface Option { label: string; value: any; disabled?: boolean }
 
 export interface BaseField {
   type: NonArrayControlType;

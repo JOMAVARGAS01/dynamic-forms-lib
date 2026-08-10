@@ -26,7 +26,7 @@ import { QuickAddDialogComponent } from '../quick-add-dialog/quick-add-dialog.co
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
 
-type Option = { label: string, value: any };
+type Option = { label: string, value: any, disabled?: boolean };
 
 @Component({
   selector: 'app-field',

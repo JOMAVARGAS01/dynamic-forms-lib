@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, Input, OnChanges, SimpleChanges, computed, effect, ChangeDetectionStrategy, ChangeDetectorRef, Optional, Signal, input } from '@angular/core';
+import { Component, OnInit, signal, inject, Input, Output, EventEmitter, OnChanges, SimpleChanges, computed, effect, ChangeDetectionStrategy, ChangeDetectorRef, Optional, Signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
@@ -91,6 +91,13 @@ export class CrudManagerComponent implements OnInit, OnChanges {
 
   /** Reactive signal holding the current row data displayed in the grid. */
   rowData = signal<any[]>([]);
+
+  /**
+   * Emite al abrir el formulario (modo add o edit) con la fila correspondiente
+   * (null en modo add). Permite al host ajustar el formConfig según el registro
+   * que se está editando (p.ej. marcar readonly un campo por el estado actual).
+   */
+  @Output() formOpened = new EventEmitter<{ mode: 'add' | 'edit'; data: any }>();
   /** Whether the form sidebar is currently open. */
   isFormOpen = signal<boolean>(false);
   /** Whether data is currently loading. Toggles the indeterminate progress bar. */
@@ -326,6 +333,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     this.formMode.set('add');
     this.initialData.set(null);
     this.isFormOpen.set(true);
+    this.formOpened.emit({ mode: 'add', data: null });
   }
 
   /** Opens the sidebar in 'edit' mode pre-filled with the given record data. */
@@ -340,15 +348,18 @@ export class CrudManagerComponent implements OnInit, OnChanges {
           const detail = this.responseMapper(res);
           this.initialData.set(Array.isArray(detail) ? detail[0] ?? data : detail ?? data);
           this.isFormOpen.set(true);
+          this.formOpened.emit({ mode: 'edit', data: this.initialData() });
         },
         error: () => {
           this.initialData.set(data);
           this.isFormOpen.set(true);
+          this.formOpened.emit({ mode: 'edit', data: this.initialData() });
         }
       });
     } else {
       this.initialData.set(data);
       this.isFormOpen.set(true);
+      this.formOpened.emit({ mode: 'edit', data: this.initialData() });
     }
   }
 

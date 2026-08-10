@@ -112,7 +112,7 @@
             </mat-option>
             }
             @for (opt of allOptions(); track opt.value) {
-            <mat-option [value]="opt.value">{{opt.label}}</mat-option>
+            <mat-option [value]="opt.value" [disabled]="opt.disabled">{{opt.label}}</mat-option>
             }
         </mat-select>
         @if (hasQuickAdd()) {
