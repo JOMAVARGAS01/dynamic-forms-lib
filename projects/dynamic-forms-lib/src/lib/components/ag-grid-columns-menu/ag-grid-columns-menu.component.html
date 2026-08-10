@@ -15,7 +15,7 @@
     <span class="ag-columns-menu__count">{{ visibleCountText() }}</span>
   </div>
   <div class="ag-columns-menu__list">
-    @for (item of visibleColumns(); track item.id) {
+    @for (item of visibleColumns(); track $index) {
       <mat-checkbox
         class="ag-columns-menu__item"
         [checked]="item.visible"

@@ -53,7 +53,10 @@ export class AgGridColumnsMenuComponent {
     const api = this.gridApi;
     const excluded = new Set(this.excludeColumnIds);
     return this.columns
-      .filter((col) => !excluded.has(this.colIdOf(col)))
+      // Columnas sin identidad (sin colId/field/headerName, p.ej. foto o
+      // acciones decorativas) no se listan: no tienen sentido de ocultarse y
+      // su id vacío rompería el track del @for (NG0955 por claves duplicadas).
+      .filter((col) => this.colIdOf(col) !== '' && !excluded.has(this.colIdOf(col)))
       .map((col) => {
         const id = this.colIdOf(col);
         const column = api?.getColumn(id);
