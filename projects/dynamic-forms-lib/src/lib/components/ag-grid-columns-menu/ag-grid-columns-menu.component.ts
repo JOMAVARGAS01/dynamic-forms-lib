@@ -41,6 +41,8 @@ export class AgGridColumnsMenuComponent {
   @Input() excludeColumnIds: string[] = [];
   /** Tooltip / aria-label del botón (i18n). */
   @Input() tooltip: string = '';
+  /** Título del panel del menú (i18n). Vacío oculta el texto del header. */
+  @Input() title: string = '';
 
   /** Versión del menú: se incrementa al abrir para re-leer el estado visible. */
   private menuVersion = signal(0);
@@ -64,6 +66,13 @@ export class AgGridColumnsMenuComponent {
   });
 
   private visibleCount = computed(() => this.visibleColumns().filter((c) => c.visible).length);
+
+  /** Contador "N/M" de columnas visibles vs totales, para el header del panel. */
+  visibleCountText = computed(() => {
+    const all = this.visibleColumns();
+    const visible = all.filter((c) => c.visible).length;
+    return `${visible}/${all.length}`;
+  });
 
   onMenuOpened(): void {
     this.menuVersion.update((v) => v + 1);

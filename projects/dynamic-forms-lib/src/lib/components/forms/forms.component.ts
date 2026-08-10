@@ -131,7 +131,13 @@ export class FormsComponent implements OnInit {
           }
         }
 
-        controls[field.name] = [initialValue, validators];
+        // Readonly a nivel de control: un campo readonly se crea DESHABILITADO
+        // para que TODOS los tipos de widget (switch, checkbox, radio, select,
+        // inputs, date, time...) queden bloqueados vía ControlValueAccessor,
+        // sin depender del atributo por-widget en el template.
+        controls[field.name] = field.readonly
+          ? [{ value: initialValue, disabled: true }, validators]
+          : [initialValue, validators];
       });
     });
 

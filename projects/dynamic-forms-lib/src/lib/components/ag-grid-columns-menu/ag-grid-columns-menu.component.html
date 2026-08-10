@@ -9,6 +9,11 @@
 </button>
 
 <mat-menu #menu="matMenu" panelClass="ag-columns-menu-panel" (opened)="onMenuOpened()">
+  <div class="ag-columns-menu__header">
+    <mat-icon class="ag-columns-menu__header-icon">view_column</mat-icon>
+    <span class="ag-columns-menu__title">{{ title }}</span>
+    <span class="ag-columns-menu__count">{{ visibleCountText() }}</span>
+  </div>
   <div class="ag-columns-menu__list">
     @for (item of visibleColumns(); track item.id) {
       <mat-checkbox
@@ -16,7 +21,7 @@
         [checked]="item.visible"
         [disabled]="isLastVisible(item)"
         (change)="toggle(item.id, $event.checked)">
-        {{ item.label }}
+        <span class="ag-columns-menu__label">{{ item.label }}</span>
       </mat-checkbox>
     }
   </div>
