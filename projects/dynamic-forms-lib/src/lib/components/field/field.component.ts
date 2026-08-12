@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef, Optional, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef, Optional, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { switchMap, startWith, tap, catchError, map, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -25,7 +25,7 @@ import { MatTimepickerModule } from '@angular/material/timepicker';
 import { FileArrayComponent } from '../file-array/file-array.component';
 import { QuickAddDialogComponent } from '../quick-add-dialog/quick-add-dialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 type Option = { label: string, value: any, disabled?: boolean };
 
@@ -293,7 +293,10 @@ export class FieldComponent implements OnInit {
       .filter(Boolean)
       .map(t => {
         const opt = options.find(o => String(o.value).toLowerCase() === t.toLowerCase());
-        return { token: t, label: opt?.label ?? t };
+        if (opt) return { token: t, label: opt.label };
+        // Token de usuario (U:xxx): el value de la opción del api no lleva prefijo.
+        const apiOpt = options.find(o => t.toLowerCase() === `u:${String(o.value).toLowerCase()}`);
+        return { token: t, label: apiOpt?.label ?? t };
       });
   });
 
@@ -307,12 +310,59 @@ export class FieldComponent implements OnInit {
     control.valueChanges.pipe(distinctUntilChanged()).subscribe(() => this.cdr.markForCheck());
   }
 
-  /** Filtra las opciones cargadas por el texto del input (client-side). */
+  /** Filtra las opciones cargadas por el texto del input (client-side) o,
+   *  si el campo define `api.searchParam`, dispara la búsqueda al API con
+   *  debounce (patrón del chat: GET ?searchParam=texto). */
   onChipsQuery(event: Event): void {
     const q = (event.target as HTMLInputElement).value;
     this.chipsQuery.set(q);
-    this.filterOptions(q);
+    const chipsField = this.field as ChipsField;
+    if (chipsField.api?.searchParam) {
+      clearTimeout(this.chipsSearchTimer);
+      this.chipsSearchTimer = setTimeout(() => void this.buscarChipsApi(q), 250);
+    } else {
+      this.filterOptions(q);
+    }
     this.cdr.markForCheck();
+  }
+
+  private chipsSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Busca opciones en el API del campo (usuarios por tecla). Con texto vacío
+   *  trae todos; las options estáticas (roles) se mantienen en la lista. */
+  private async buscarChipsApi(q: string): Promise<void> {
+    const chipsField = this.field as ChipsField;
+    const api = chipsField.api;
+    if (!api?.searchParam) return;
+
+    this.isLoadingOptions.set(true);
+    try {
+      const params = q.trim()
+        ? new HttpParams().set(api.searchParam, q.trim())
+        : new HttpParams();
+      const res: any = await this.http.get<any>(api.endpoint, { params }).toPromise();
+      const list: any[] = Array.isArray(res) ? res : (res as any)?.data ?? [];
+
+      const apiOptions = list
+        .map(item => ({
+          value: resolveProperty(item, api.valueKey ?? 'id'),
+          label: resolveProperty(item, api.labelKey ?? 'name'),
+        }))
+        .filter(o => o.value !== null && o.label !== null);
+
+      const staticOpts = this.getStaticOptions();
+      const combined = [...staticOpts, ...apiOptions];
+      this.allOptions.set(combined);
+      const texto = q.trim().toLowerCase();
+      this.filteredOptions.set(
+        texto ? combined.filter(o => o.label.toLowerCase().includes(texto)) : combined,
+      );
+    } catch {
+      this.filteredOptions.set(this.getStaticOptions());
+    } finally {
+      this.isLoadingOptions.set(false);
+      this.cdr.markForCheck();
+    }
   }
 
   /** Agrega el token de la opción seleccionada (api → prefijo apiPrefix; estática → tal cual). */
@@ -487,4 +537,25 @@ export class FieldComponent implements OnInit {
   isSimpleInput(type: string): boolean {
     return ['text', 'email', 'password', 'tel', 'url', 'number', 'color', 'week', 'month', 'textarea'].includes(type);
   }
+
+  /** Limpia el debounce de búsqueda de chips al destruir el componente. */
+  ngOnDestroy(): void {
+    if (this.chipsSearchTimer !== null) {
+      clearTimeout(this.chipsSearchTimer);
+    }
+  }
 }
+
+/** Resuelve una propiedad anidada por path (misma semántica que DynamicOptionsService). */
+function resolveProperty(obj: any, path: string): any {
+  if (!path) return obj;
+  return path.split('.').reduce((prev, curr) => {
+    if (prev === null || prev === undefined) return null;
+    if (curr === '*') {
+      const keys = Object.keys(prev);
+      return keys.length > 0 ? prev[keys[0]] : null;
+    }
+    return prev[curr];
+  }, obj);
+}
+

@@ -36,6 +36,9 @@ export interface ApiConfig {
   labelKey?: string;
   dependsOn?: string;
   queryParam?: string;
+  /** Nombre del query param de búsqueda por tecla (solo tipo chips): el input
+   *  dispara GET ?searchParam=texto con debounce (250ms). Texto vacío → sin param. */
+  searchParam?: string;
 }
 
 export interface Option { label: string; value: any; disabled?: boolean }
