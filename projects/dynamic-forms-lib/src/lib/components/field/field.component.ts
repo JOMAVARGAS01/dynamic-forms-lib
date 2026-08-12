@@ -12,10 +12,11 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MatOptionModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { FieldConfig, SelectField, BaseField, RenderableFieldConfig, FORM_FIELD_APPEARANCE } from '../../types/dynamic-form.types';
+import { FieldConfig, SelectField, BaseField, ChipsField, RenderableFieldConfig, FORM_FIELD_APPEARANCE } from '../../types/dynamic-form.types';
 import { DynamicOptionsService } from '../../services/dynamic-options.service';
 import { FormConfigRegistry } from '../../services/form-config-registry.service';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
@@ -38,7 +39,7 @@ type Option = { label: string, value: any, disabled?: boolean };
     MatSlideToggleModule, MatDatepickerModule, MatNativeDateModule,
     MatOptionModule, MatButtonModule, MatProgressSpinnerModule,
     MatAutocompleteModule, MatIconModule, MatTooltipModule, MatRadioModule,
-    MatTimepickerModule, FileArrayComponent, MatDialogModule
+    MatTimepickerModule, MatChipsModule, FileArrayComponent, MatDialogModule
   ],
   styleUrls: ['./field.component.css'],
   templateUrl: './field.component.html'
@@ -140,7 +141,7 @@ export class FieldComponent implements OnInit {
     this.allOptions.set(staticOpts);
     this.filteredOptions.set(staticOpts);
 
-    if (f.type === 'select' || f.type === 'autocomplete') {
+    if (f.type === 'select' || f.type === 'autocomplete' || f.type === 'chips') {
       const apiConfig = f.api;
       const dependentConfig = f.dependentOptions;
 
@@ -195,9 +196,11 @@ export class FieldComponent implements OnInit {
     this.allOptions.set(combined);
     this.filteredOptions.set(combined);
 
-    const f = this.field as SelectField;
+    const f = this.field as SelectField | ChipsField;
     if (f.type === 'autocomplete') {
       this.setupAutocompletePostLoad();
+    } else if (f.type === 'chips') {
+      this.setupChipsPostLoad();
     } else if (f.type === 'select') {
       const control = this.form.get(this.field.name);
       const currentValue = control?.value;
@@ -273,6 +276,86 @@ export class FieldComponent implements OnInit {
     }
     return valueString;
   };
+
+  // ── Chips: selección múltiple con tokens ';'-separados (p.ej. EnviarA) ──
+
+  /** Texto del input de búsqueda. */
+  chipsQuery = signal<string>('');
+  /** Chips derivados del FormControl: tokens → { token, label }. */
+  readonly chipsItems = computed(() => {
+    const control = this.form.get(this.field.name);
+    const value = control?.value as string | null;
+    if (!value) return [];
+    const options = this.allOptions();
+    return value
+      .split(';')
+      .map(t => t.trim())
+      .filter(Boolean)
+      .map(t => {
+        const opt = options.find(o => String(o.value).toLowerCase() === t.toLowerCase());
+        return { token: t, label: opt?.label ?? t };
+      });
+  });
+
+  private isChipsSetup = false;
+
+  private setupChipsPostLoad(): void {
+    if (this.isChipsSetup || this.field.type !== 'chips') return;
+    const control = this.form.get(this.field.name);
+    if (!control) return;
+    this.isChipsSetup = true;
+    control.valueChanges.pipe(distinctUntilChanged()).subscribe(() => this.cdr.markForCheck());
+  }
+
+  /** Filtra las opciones cargadas por el texto del input (client-side). */
+  onChipsQuery(event: Event): void {
+    const q = (event.target as HTMLInputElement).value;
+    this.chipsQuery.set(q);
+    this.filterOptions(q);
+    this.cdr.markForCheck();
+  }
+
+  /** Agrega el token de la opción seleccionada (api → prefijo apiPrefix; estática → tal cual). */
+  onChipsOptionSelected(event: MatAutocompleteSelectedEvent): void {
+    const opt = event.option.value as Option;
+    const value = String(opt.value);
+    const prefix = (this.field as any).apiPrefix ?? 'U';
+    const token = value.includes(':') ? value : `${prefix}:${value}`;
+    this.addChip(token);
+  }
+
+  /** Agrega un token al control si no existe (case-insensitive). */
+  addChip(token: string): void {
+    const control = this.form.get(this.field.name);
+    if (!control) return;
+    const actual = (control.value as string) ?? '';
+    const tokens = actual.split(';').map(t => t.trim()).filter(Boolean);
+    if (!tokens.some(t => t.toLowerCase() === token.toLowerCase())) {
+      tokens.push(token);
+    }
+    control.setValue(tokens.join(';'));
+    control.markAsTouched();
+    this.chipsQuery.set('');
+    this.filterOptions('');
+    this.cdr.markForCheck();
+  }
+
+  /** Quita un token del control (case-insensitive). */
+  removeChip(token: string): void {
+    const control = this.form.get(this.field.name);
+    if (!control) return;
+    const tokens = ((control.value as string) ?? '')
+      .split(';').map(t => t.trim())
+      .filter(t => t && t.toLowerCase() !== token.toLowerCase());
+    control.setValue(tokens.join(';'));
+    control.markAsTouched();
+    this.cdr.markForCheck();
+  }
+
+  /** Distingue opciones de rol (token R:) para el ícono del autocomplete. */
+  isRolOption(opt: Option): boolean {
+    return String(opt.value).startsWith('R:');
+  }
 
   /** Returns the static options array from the field configuration (select, autocomplete, radio, checkbox-multiple). */
   getStaticOptions(): Option[] {

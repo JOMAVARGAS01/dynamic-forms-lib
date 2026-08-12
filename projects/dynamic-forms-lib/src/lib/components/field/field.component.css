@@ -63,3 +63,22 @@ textarea[readonly] {
   margin-right: 4px;
 }
 
+/* ── Chips (selección múltiple, p.ej. EnviarA) ── */
+.chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.chips-grid input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.chips-opt-icon {
+  margin-right: 6px;
+  font-size: 18px;
+  vertical-align: middle;
+}
+

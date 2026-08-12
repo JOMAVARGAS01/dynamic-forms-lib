@@ -22,7 +22,8 @@ export type ControlType =
   | 'url'
   | 'week'
   | 'form-array'
-  | 'file-array';
+  | 'file-array'
+  | 'chips';
 
 /** ControlType union excluding the 'form-array' literal. Used by `BaseField` so that
  *  TypeScript narrowing via `field.type === 'form-array'` correctly isolates `FormArrayField`. */
@@ -47,6 +48,8 @@ export interface BaseField {
   options?: Option[];
   value?: any;
   readonly?: boolean;
+  /** Placeholder del input (aplica a tipos text-like y chips). */
+  placeholder?: string;
   /** When true, the field is not rendered in the DOM but its FormControl value
    *  is still included in the form payload on submit. Useful for rowVersion,
    *  internal IDs, and other data that must travel with the request but should
@@ -158,6 +161,22 @@ export interface FileArrayField extends BaseField {
   onDownloadExisting?: (id: number) => void;
 }
 
+/**
+ * Campo de selección múltiple tipo chips (p.ej. destinatarios EnviarA).
+ * El FormControl guarda un string separado por ';' con tokens
+ * `U:{valor}` / `R:{valor}` (usuario / rol). Las `options` estáticas se usan
+ * tal cual (su `value` ya es el token, p.ej. 'R:Admin'); las opciones del
+ * `api` (endpoint de búsqueda, p.ej. usuarios) se prefijan con `apiPrefix`
+ * (default 'U') al seleccionarlas. Filtro client-side sobre las opciones cargadas.
+ */
+export interface ChipsField extends BaseField {
+  type: 'chips';
+  options?: Option[];
+  api?: ApiConfig;
+  /** Prefijo del token para opciones cargadas por api (default 'U'). */
+  apiPrefix?: string;
+}
+
 /** Archivo ya guardado en BD, mostrado junto a los nuevos uploads. */
 export interface ExistingFile {
   id: number;
@@ -166,7 +185,7 @@ export interface ExistingFile {
   type: string;
 }
 
-export type FieldConfig = SelectField | TextField | BaseField | FormArrayField | FileArrayField;
+export type FieldConfig = SelectField | TextField | BaseField | FormArrayField | FileArrayField | ChipsField;
 
 /** Field config that can be rendered by `FieldComponent` — excludes `FormArrayField`,
  *  which is rendered by `FormArrayComponent` instead. Used to narrow the

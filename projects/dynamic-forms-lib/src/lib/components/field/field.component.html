@@ -163,6 +163,50 @@
     </mat-form-field>
 
     }
+    @case ('chips') {
+    <mat-form-field [appearance]="appearance" class="full-width">
+        <mat-label>
+            @if (field.readonly) {
+            <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            {{field.label}}
+        </mat-label>
+        <mat-chip-grid #chipGrid class="chips-grid">
+            @for (item of chipsItems(); track item.token) {
+            <mat-chip-row [disabled]="!!field.readonly" (removed)="removeChip(item.token)">
+                {{ item.label }}
+                @if (!field.readonly) {
+                <button matChipRemove [attr.aria-label]="'Quitar ' + item.label">
+                    <mat-icon>cancel</mat-icon>
+                </button>
+                }
+            </mat-chip-row>
+            }
+            <input matInput [matChipInputFor]="chipGrid" [matAutocomplete]="chipsAuto"
+                [value]="chipsQuery()" (input)="onChipsQuery($event)" [readonly]="field.readonly"
+                [placeholder]="field.placeholder || ''" />
+        </mat-chip-grid>
+        <mat-autocomplete #chipsAuto="matAutocomplete" (optionSelected)="onChipsOptionSelected($event)">
+            @for (opt of filteredOptions(); track opt.value) {
+            <mat-option [value]="opt">
+                <mat-icon class="chips-opt-icon" inline>{{ isRolOption(opt) ? 'group' : 'person' }}</mat-icon>
+                {{ opt.label }}
+            </mat-option>
+            }
+            @if (isLoadingOptions()) {
+            <mat-option disabled class="loading-option">
+                <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
+                Buscando...
+            </mat-option>
+            } @else if (filteredOptions().length === 0) {
+            <mat-option disabled>Sin resultados</mat-option>
+            }
+        </mat-autocomplete>
+        @if (hasError()) {
+        <mat-error>{{getErrorMessage()}}</mat-error>
+        }
+    </mat-form-field>
+    }
     @case ('file') {
     <div class="full-width file-container">
         <label class="file-label">{{field.label}}</label>
