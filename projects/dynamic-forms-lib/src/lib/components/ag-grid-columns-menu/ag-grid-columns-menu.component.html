@@ -2,13 +2,14 @@
   mat-icon-button
   type="button"
   [matMenuTriggerFor]="menu"
+  (menuOpened)="onMenuOpened()"
   [disabled]="!gridApi"
   [matTooltip]="tooltip"
   [attr.aria-label]="tooltip">
   <mat-icon>view_column</mat-icon>
 </button>
 
-<mat-menu #menu="matMenu" panelClass="ag-columns-menu-panel" (opened)="onMenuOpened()">
+<mat-menu #menu="matMenu" panelClass="ag-columns-menu-panel">
   <div class="ag-columns-menu__header">
     <mat-icon class="ag-columns-menu__header-icon">view_column</mat-icon>
     <span class="ag-columns-menu__title">{{ title }}</span>

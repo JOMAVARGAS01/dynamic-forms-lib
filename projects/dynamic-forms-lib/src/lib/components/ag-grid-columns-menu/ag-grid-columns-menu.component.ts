@@ -33,8 +33,23 @@ export interface AgGridColumnVisibilityItem {
   styleUrls: ['./ag-grid-columns-menu.component.css'],
 })
 export class AgGridColumnsMenuComponent {
-  /** Grid API de la grilla a controlar. Null hasta que la grilla está lista (botón deshabilitado). */
-  @Input() gridApi: GridApi | null = null;
+  /**
+   * Grid API de la grilla a controlar. Null hasta que la grilla está lista
+   * (botón deshabilitado). Setter: al llegar la API se invalida el computed
+   * (menuVersion++) para que el estado inicial "todas visibles" (evaluado con
+   * gridApi null → `?? true`) nunca quede cacheado.
+   */
+  private _gridApi: GridApi | null = null;
+
+  @Input()
+  set gridApi(api: GridApi | null) {
+    this._gridApi = api;
+    this.menuVersion.update((v) => v + 1);
+  }
+
+  get gridApi(): GridApi | null {
+    return this._gridApi;
+  }
   /** Definiciones de columnas a listar en el menú. */
   @Input() columns: ColDef[] = [];
   /** ColIds que no deben aparecer en el menú (p.ej. columna de acciones). */
