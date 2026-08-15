@@ -13,6 +13,7 @@ import { FieldComponent } from '../field/field.component';
 import { FormArrayComponent } from '../form-array/form-array.component';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
 import { applyVisibility, buildFormArrayValidators, buildItemFormGroup, isFormArray, normalizeDates } from '../visibility';
+import { normalizeFormConfig } from './layout';
 
 @Component({
   selector: 'app-forms',
@@ -67,6 +68,11 @@ export class FormsComponent implements OnInit {
   t = computed(() => this._translations?.() ?? DEFAULT_TRANSLATIONS);
 
   ngOnInit() {
+    // Normaliza el layout ANTES de construir el form: reagrupa los campos
+    // de cada grupo en filas de 12 (estira el último de cada fila para
+    // llenar el hueco). El config original del consumidor NO se muta
+    // (normalizeFormConfig devuelve clones).
+    this.config = normalizeFormConfig(this.config);
     this.buildForm();
     if (this.initialData) {
       this.patchForm(this.initialData);
