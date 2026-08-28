@@ -247,6 +247,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
 
   /** Exports the visible grid data (excluding actions column) to an Excel file. */
   async onExport(): Promise<void> {
+    if (!this.resolvedPermissions().canExport) return;
     const { blob, filename } = await this.buildExcelExport();
     this.downloadFile(blob, filename);
   }
@@ -295,11 +296,50 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     // Column widths
     ws.columns = headers.map(h => ({ width: Math.min((String(h || '').length || 10) + 5, 50) }));
 
-    // Data rows (respects current filter)
+    // Data rows (respects current filter). El TIPO de la celda lo decide la
+    // colDef (fuente de verdad), NO el valor:
+    // - cellDataType 'number' → número + numFmt moneda (el autor lo declaró monto/valor)
+    // - cellDataType 'date'   → Date + numFmt fecha
+    // - cellDataType 'boolean'→ TRUE/FALSE
+    // - valueFormatter sin cellDataType → se aplica el display (texto formateado,
+    //   p.ej. "etiqueta — nombre" o un código) — NO se fuerza número
+    // - sin nada → valor crudo tipado (Date real, string ISO→Date, número SIN
+    //   numFmt, boolean, resto texto)
+    //
+    // IMPORTANTE: el cellDataType se toma del INPUT ORIGINAL de la página
+    // (this.columnDefs()), NO del colDef resuelto por AG Grid — AG Grid 34
+    // INFIERE cellDataType automáticamente (toda columna numérica → 'number'),
+    // lo que formatearía como moneda códigos/IDs no declarados.
+    const declaredCellTypes = new Map<string, any>();
+    this.columnDefs().forEach(col => {
+      if (col.field) declaredCellTypes.set(col.field, col.cellDataType);
+    });
+
+    const firstValues: any[] = fields.map(() => null);
     this.gridApi.forEachNodeAfterFilter((node) => {
       if (node.data) {
-        const row = fields.map(field => (field ? node.data[field] ?? '' : ''));
+        const row = fields.map((field, i) => {
+          const v = field ? node.data[field] : undefined;
+          const typed = this.toExcelValue(v, visibleColumns[i]?.getColDef(), node.data, declaredCellTypes.get(field ?? ''));
+          if (firstValues[i] === null && typed !== null) firstValues[i] = typed;
+          return typed;
+        });
         ws.addRow(row);
+      }
+    });
+
+    // numFmt por columna según el tipo resultante (montos/fechas DECLARADAS o
+    // detectadas); los números NO declarados como monto quedan sin formato.
+    const dataStartRow = headerRowIndex + 1;
+    const dataRowCount = ws.actualRowCount - (dataStartRow - 1);
+    fields.forEach((field, i) => {
+      const sample = firstValues[i];
+      const fmt = sample instanceof Date ? 'dd/mm/yyyy'
+        : typeof sample === 'number' && declaredCellTypes.get(field ?? '') === 'number' ? '#,##0.00'
+        : undefined;
+      if (!fmt) return;
+      for (let r = dataStartRow; r < dataStartRow + dataRowCount; r++) {
+        ws.getCell(r, i + 1).numFmt = fmt;
       }
     });
 
@@ -309,6 +349,63 @@ export class CrudManagerComponent implements OnInit, OnChanges {
     const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     return { blob, filename };
+  }
+
+  /**
+   * Convierte un valor crudo de la grilla al tipo real para la celda de Excel.
+   * La colDef es la fuente de verdad (NO el tipo del valor):
+   * - cellDataType DECLARADO 'number' → number (celda numérica)
+   * - cellDataType DECLARADO 'date' → Date (celda de fecha)
+   * - cellDataType DECLARADO 'boolean' → boolean (TRUE/FALSE)
+   * - valueFormatter presente (sin cellDataType) → se respeta el display
+   *   formateado (texto), p.ej. "etiqueta — nombre" en la columna de activo
+   * - sin cellDataType ni valueFormatter → crudo tipado conservador:
+   *   Date real / string ISO fecha → Date; boolean → boolean; number → number
+   *   SIN numFmt; resto → string (o null si vacío)
+   */
+  private toExcelValue(v: any, colDef?: ColDef, rowData?: any, declaredCellDataType?: any): any {
+    // 1) cellDataType DECLARADO por la página: autoridad (no la inferencia
+    //    automática de AG Grid, que marcaría todo número como 'number').
+    //    Va ANTES del valueFormatter porque el tipo declarado define el valor
+    //    a exportar (p.ej. costo → number para fórmulas), aunque la columna
+    //    también tenga un valueFormatter de display.
+    if (declaredCellDataType === 'number') {
+      const n = typeof v === 'number' ? v : Number(String(v).replace(/[^\d.-]/g, ''));
+      return Number.isNaN(n) ? null : n;
+    }
+    if (declaredCellDataType === 'date') return this.toDateOrNull(v);
+    if (declaredCellDataType === 'boolean') return Boolean(v);
+
+    // 2) valueFormatter sin cellDataType: respetar el display de la columna
+    //    (es string formateado; NO forzar número). Se pasa la fila completa
+    //    para valueFormatters que combinan campos (p.ej. "etiqueta — nombre").
+    //    Se aplica SIEMPRE, incluso con null/'' — el valueFormatter decide cómo
+    //    representar el vacío (p.ej. badge de Estado → "Pendiente").
+    if (typeof colDef?.valueFormatter === 'function') {
+      const formatted = colDef.valueFormatter({ value: v, data: rowData } as any);
+      return formatted ?? '';
+    }
+
+    // 3) Sin metadata: conversión conservadora por tipo del dato
+    if (v == null || v === '') return null;
+    if (v instanceof Date) return v;
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v; // número crudo, sin numFmt
+    if (typeof v === 'string') {
+      const trimmed = v.trim();
+      if (trimmed === '') return null;
+      if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+        const d = new Date(trimmed);
+        if (!Number.isNaN(d.getTime())) return d;
+      }
+    }
+    return v;
+  }
+
+  /** string ISO / Date → Date, o null si no es fecha válida. */
+  private toDateOrNull(v: any): Date | null {
+    const d = v instanceof Date ? v : new Date(String(v));
+    return Number.isNaN(d.getTime()) ? null : d;
   }
 
   /**
@@ -328,7 +425,9 @@ export class CrudManagerComponent implements OnInit, OnChanges {
 
   /** Opens the sidebar in 'add' mode for creating a new record. */
   onAdd() {
-    if (this.resolvedPermissions().readonly) return;
+    // SDD permisos-proceso-evento-rol: validación de permiso además de la UI
+    // (el botón se ve deshabilitado; esto cubre invocación directa).
+    if (this.resolvedPermissions().readonly || !this.resolvedPermissions().canCreate) return;
     this.sidebarService.closeSidebar();
     this.formMode.set('add');
     this.initialData.set(null);
@@ -338,6 +437,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
 
   /** Opens the sidebar in 'edit' mode pre-filled with the given record data. */
   onEdit(data: any) {
+    if (!this.resolvedPermissions().canUpdate) return;
     this.sidebarService.closeSidebar();
     this.formMode.set('edit');
 
@@ -365,6 +465,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
 
   /** Deletes a record after confirmation. Uses deleteUrl function or falls back to apiUrl/{id}. */
   onDelete(data: any) {
+    if (!this.resolvedPermissions().canDelete) return;
     if (!data) {
       this.showSnack('missingDataError');
       return;
@@ -389,7 +490,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
         },
         error: (err) => {
           console.error('Error deleting record', err);
-          this.showSnack('deleteError');
+          this.showRequestError(err, 'deleteError');
         }
       });
     });
@@ -505,7 +606,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
       },
       error: (err) => {
         console.error(`${method.toUpperCase()} request failed`, err);
-        this.showSnack(errorKey);
+        this.showRequestError(err, errorKey);
       }
     });
   }
@@ -524,6 +625,24 @@ export class CrudManagerComponent implements OnInit, OnChanges {
    */
   private showSnack(messageKey: keyof DynamicFormsTranslations['crud']): void {
     this.snackBar.open(this.t().crud[messageKey], this.t().snackbar.close, { duration: 3000 });
+  }
+
+  /**
+   * Muestra el mensaje del error enviado por el BE (ApiResponse
+   * { success, message, data }) cuando existe; si no, cae a la traducción
+   * genérica. Así las validaciones de negocio del BE (p. ej. "la categoría
+   * tiene N subcategorías") llegan al usuario con el texto real.
+   */
+  private showRequestError(
+    err: any,
+    errorKey: keyof DynamicFormsTranslations['crud']
+  ): void {
+    const message = err?.error?.message;
+    if (typeof message === 'string' && message.trim()) {
+      this.snackBar.open(message, this.t().snackbar.close, { duration: 5000 });
+      return;
+    }
+    this.showSnack(errorKey);
   }
 
   private openCustomConfirmation(message: string, onConfirm: () => void) {

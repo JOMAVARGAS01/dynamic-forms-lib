@@ -3,17 +3,18 @@
     <h2 class="header-title">{{ title }}</h2>
 
     <div class="controls-bar">
-      @if (!resolvedPermissions().readonly && resolvedPermissions().canCreate) {
-      <button mat-flat-button (click)="onAdd()">
+      <!-- SDD permisos-proceso-evento-rol: el botón se muestra SIEMPRE pero
+           deshabilitado (gris) cuando el rol no tiene el evento (antes se
+           ocultaba con @if). -->
+      <button mat-flat-button (click)="onAdd()"
+              [disabled]="resolvedPermissions().readonly || !resolvedPermissions().canCreate">
         <mat-icon>add</mat-icon> {{ t().crud.add }}
       </button>
-      }
 
-      @if (resolvedPermissions().canExport) {
-      <button mat-stroked-button (click)="onExport()">
+      <button mat-stroked-button (click)="onExport()"
+              [disabled]="!resolvedPermissions().canExport">
         <mat-icon>download</mat-icon> {{ t().crud.export }}
       </button>
-      }
 
       <app-ag-grid-columns-menu
         [gridApi]="gridApi"
