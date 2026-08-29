@@ -51,6 +51,16 @@ export interface BaseField {
   options?: Option[];
   value?: any;
   readonly?: boolean;
+  /**
+   * Campo CALCULADO (solo informativo): el valor lo produce la función
+   * cada vez que cambia el form (raíz y/o el item del form-array que lo
+   * contiene) y se escribe en el control con emitEvent:false — el usuario
+   * no lo edita (el config debe marcarlo readonly) y no debe depender de
+   * él el payload (el BE ignora propiedades extra).
+   * - Campo raíz: `calculate(form)`.
+   * - Campo dentro de un form-array: `calculate(form, itemGroup)`.
+   */
+  calculate?: (form: any, itemGroup?: any) => string | number | null;
   /** Placeholder del input (aplica a tipos text-like y chips). */
   placeholder?: string;
   /** When true, the field is not rendered in the DOM but its FormControl value

@@ -114,10 +114,12 @@
   }
   }
 
+  @if (!hideFooter) {
   <div class="actions">
     <button matButton="outlined" type="button" (click)="cancel.emit()">{{ t().form.cancel }}</button>
     <button matButton="filled" type="submit" [disabled]="isFormInvalid">{{ t().form.save }}</button>
   </div>
+  }
 
 </form>
 }

@@ -18,6 +18,15 @@ export interface QuickAddConfig {
   url?: string;
   /** Fields to show in the dialog. Defaults to [{ name: 'name', label: 'Nombre', required: true }] */
   fields?: QuickAddField[];
+  /**
+   * FormConfig completo para el dialog. Si viene, reemplaza al del
+   * FormConfigRegistry — permite pasar un config con la empresa/locale
+   * ACTUALES (el registry es estático, empresa 1).
+   */
+  formConfig?: FormConfig;
+  /** Datos iniciales para pre-cargar el form en modo add (p.ej. el activo
+   * en un form-array). Se aplica en el ngOnInit del FormsComponent. */
+  initialData?: Record<string, any>;
 }
 
 export interface QuickAddField {
@@ -99,8 +108,9 @@ export class QuickAddDialogComponent implements AfterViewInit {
   constructor() {
     this.data = inject<QuickAddConfig>(MAT_DIALOG_DATA);
 
-    // Check if a full FormConfig is registered for this resource
-    const registered = this.registry.get(this.data.resource);
+    // Check if a full FormConfig is registered for this resource (o viene
+    // directo en la config — caso del quickAdd con empresa/locale actuales).
+    const registered = this.data.formConfig ?? this.registry.get(this.data.resource);
     if (registered) {
       this.fullFormConfig = registered;
       return; // Skip simple field setup — form loaded dynamically in ngAfterViewInit
@@ -133,6 +143,11 @@ export class QuickAddDialogComponent implements AfterViewInit {
       this.formComponentRef = this.formHost.createComponent(FormsComponent);
       this.formComponentRef.instance.config = this.fullFormConfig;
       this.formComponentRef.instance.mode = 'add';
+      this.formComponentRef.instance.initialData = this.data.initialData ?? null;
+      // El dialog expone su PROPIO footer fijo (Guardar/Cancelar siempre
+      // visibles) — se oculta el footer interno del form para no duplicar
+      // botones ni obligar a scrollear para guardar.
+      this.formComponentRef.instance.hideFooter = true;
       this.formComponentRef.instance.formSubmit.subscribe((formData: FormData) => this.onFullFormSubmit(formData));
       this.formComponentRef.instance.cancel.subscribe(() => this.cancel());
     }
@@ -144,7 +159,14 @@ export class QuickAddDialogComponent implements AfterViewInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    this.http.post<Option>(this.postUrl, formData).subscribe({
+    // Convierte el FormData plano a JSON (contrato del BE [FromBody]):
+    // los form-array ya viajan como JSON string (p.ej. 'activos').
+    const payload: Record<string, any> = {};
+    formData.forEach((value, key) => {
+      payload[key] = value;
+    });
+
+    this.http.post<Option>(this.postUrl, payload).subscribe({
       next: (created) => {
         const nameValue = formData.get('name') || formData.get('Name') || '';
         this.dialogRef.close({ label: String(created.label ?? nameValue), value: created.value ?? created });
@@ -181,6 +203,17 @@ export class QuickAddDialogComponent implements AfterViewInit {
         this.errorMessage = err?.error?.message ?? 'Error al crear el registro.';
       },
     });
+  }
+
+  /** Botón Guardar del footer fijo del dialog: en modo form completo delega
+   *  en el onSubmit del FormsComponent (valida y emite formSubmit); en modo
+   *  fields usa el submit simple. */
+  onGuardar() {
+    if (this.fullFormConfig) {
+      this.formComponentRef?.instance.onSubmit();
+    } else {
+      this.submit();
+    }
   }
 
   cancel() {

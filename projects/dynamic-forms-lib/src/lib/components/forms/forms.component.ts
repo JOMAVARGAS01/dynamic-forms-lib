@@ -40,6 +40,12 @@ export class FormsComponent implements OnInit {
   @Input() mode: 'add' | 'edit' = 'add';
   /** Initial data to patch into the form when in edit mode. */
   @Input() initialData: Record<string, any> | null = null;
+  /**
+   * Oculta el footer de botones (Guardar/Cancelar) del form — lo usa el
+   * QuickAddDialog cuando expone su PROPIO footer fijo con Guardar/Cancelar
+   * siempre visibles (evita el doble nivel de botones con scroll).
+   */
+  @Input() hideFooter = false;
   private defaultAppearance = inject(FORM_FIELD_APPEARANCE_TOKEN);
 
   /** Material appearance style for form fields (outline, fill, legacy, standard). */
@@ -220,9 +226,45 @@ export class FormsComponent implements OnInit {
   private setupVisibilityLogic() {
     this.form.valueChanges.subscribe((values) => {
       this.updateVisibility();
+      this.applyCalculations();
       this.cdr.markForCheck();
     });
     this.updateVisibility();
+  }
+
+  /**
+   * Campos calculados (BaseField.calculate): re-escribe el valor de cada
+   * control calculado con emitEvent:false — solo informativo (readonly).
+   * Los campos dentro de items de un form-array reciben (form, itemGroup).
+   */
+  private applyCalculations() {
+    this.config.groups.forEach(group => {
+      group.fields.forEach(field => {
+        const calc = (field as any).calculate;
+        if (field.type === 'form-array') {
+          const arrField = field as FormArrayField;
+          const arr = this.form.get(field.name) as FormArray | null;
+          if (!arr || !arrField.fields.some((f: any) => typeof f.calculate === 'function')) return;
+          arr.controls.forEach(ctrl => {
+            const itemGroup = ctrl as FormGroup;
+            arrField.fields.forEach((inner: any) => {
+              if (typeof inner.calculate !== 'function') return;
+              const control = itemGroup.get(inner.name);
+              if (control) {
+                control.setValue(inner.calculate(this.form, itemGroup), { emitEvent: false });
+              }
+            });
+          });
+          return;
+        }
+        if (typeof calc === 'function') {
+          const control = this.form.get(field.name);
+          if (control) {
+            control.setValue(calc(this.form), { emitEvent: false });
+          }
+        }
+      });
+    });
   }
 
   private updateVisibility() {

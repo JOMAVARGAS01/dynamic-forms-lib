@@ -27,10 +27,7 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button type="button" (click)="cancel()">{{ t().dialog.cancel }}</button>
-  @if (!fullFormConfig) {
-  <button mat-flat-button color="primary" type="button" (click)="submit()"
-    [disabled]="form.invalid || isSubmitting">
+  <button mat-flat-button color="primary" type="button" (click)="onGuardar()" [disabled]="isSubmitting">
     {{ t().quickAdd.add }}
   </button>
-  }
 </mat-dialog-actions>
