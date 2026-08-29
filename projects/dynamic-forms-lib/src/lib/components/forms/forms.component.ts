@@ -97,8 +97,17 @@ export class FormsComponent implements OnInit {
         if (field.type === 'file-array') return;
 
         if (field.type === 'form-array') {
-          // form-array: the control is a FormArray, items are FormGroups built per field
-          controls[field.name] = this.fb.array([], { validators: buildFormArrayValidators(field as FormArrayField) });
+          // form-array: the control is a FormArray, items are FormGroups built per field.
+          // minItems > 0: el array arranca con ese número de items pre-cargados con
+          // defaultItem — los valores por defecto aplican desde el primer item
+          // (p.ej. montos en 0 en el form-array de activos de pólizas).
+          const arrField = field as FormArrayField;
+          const initialCount = arrField.minItems ?? 0;
+          const initialItems: FormGroup[] = [];
+          for (let i = 0; i < initialCount; i++) {
+            initialItems.push(buildItemFormGroup(this.fb, arrField.fields, arrField.defaultItem));
+          }
+          controls[field.name] = this.fb.array(initialItems, { validators: buildFormArrayValidators(arrField) });
           return;
         }
 
@@ -172,6 +181,8 @@ export class FormsComponent implements OnInit {
           const arr = this.form.get(field.name) as FormArray | null;
           if (!arr) return;
           if (Array.isArray(value)) {
+            // Reemplaza los items iniciales (minItems) por los del detalle/initialData.
+            arr.clear();
             value.forEach((itemData: any) => {
               if (itemData && typeof itemData === 'object') {
                 arr.push(buildItemFormGroup(this.fb, arrField.fields, itemData));
