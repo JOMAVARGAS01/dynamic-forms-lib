@@ -1,10 +1,13 @@
 <ng-container [formGroup]="form">
     @if (!field.hidden) {
     @if (isSimpleInput(field.type)) {
-    <mat-form-field [appearance]="appearance" class="full-width">
+    <mat-form-field [appearance]="appearance" class="full-width" [class.metadata-field]="!!field.metadata">
         <mat-label>
             @if (field.readonly) {
             <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            @if (field.metadata) {
+            <mat-icon class="metadata-icon" inline>data_object</mat-icon>
             }
             {{field.label}}
         </mat-label>
@@ -66,10 +69,13 @@
     @switch (field.type) {
 
     @case ('date') {
-    <mat-form-field [appearance]="appearance" class="full-width">
+    <mat-form-field [appearance]="appearance" class="full-width" [class.metadata-field]="!!field.metadata">
         <mat-label>
             @if (field.readonly) {
             <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            @if (field.metadata) {
+            <mat-icon class="metadata-icon" inline>data_object</mat-icon>
             }
             {{field.label}}
         </mat-label>
@@ -80,10 +86,13 @@
     </mat-form-field>
     }
     @case ('time') {
-    <mat-form-field [appearance]="appearance" class="full-width">
+    <mat-form-field [appearance]="appearance" class="full-width" [class.metadata-field]="!!field.metadata">
         <mat-label>
             @if (field.readonly) {
             <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            @if (field.metadata) {
+            <mat-icon class="metadata-icon" inline>data_object</mat-icon>
             }
             {{field.label}}
         </mat-label>
@@ -97,14 +106,17 @@
     </mat-form-field>
     }
     @case ('select') {
-    <mat-form-field [appearance]="appearance" class="full-width">
+    <mat-form-field [appearance]="appearance" class="full-width" [class.metadata-field]="!!field.metadata">
         <mat-label>
             @if (field.readonly) {
             <mat-icon class="readonly-lock" inline>lock</mat-icon>
             }
+            @if (field.metadata) {
+            <mat-icon class="metadata-icon" inline>data_object</mat-icon>
+            }
             {{field.label}}
         </mat-label>
-        <mat-select [formControlName]="field.name" [disabled]="!!field.readonly">
+        <mat-select [formControlName]="field.name" [compareWith]="compareFn" [disabled]="!!field.readonly">
             @if (isLoadingOptions()) {
             <mat-option disabled class="loading-option">
                 <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
@@ -125,10 +137,13 @@
     </mat-form-field>
     }
     @case ('autocomplete') {
-    <mat-form-field [appearance]="appearance" class="full-width">
+    <mat-form-field [appearance]="appearance" class="full-width" [class.metadata-field]="!!field.metadata">
         <mat-label>
             @if (field.readonly) {
             <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            @if (field.metadata) {
+            <mat-icon class="metadata-icon" inline>data_object</mat-icon>
             }
             {{field.label}}
         </mat-label>
@@ -164,10 +179,13 @@
 
     }
     @case ('chips') {
-    <mat-form-field [appearance]="appearance" class="full-width">
+    <mat-form-field [appearance]="appearance" class="full-width" [class.metadata-field]="!!field.metadata">
         <mat-label>
             @if (field.readonly) {
             <mat-icon class="readonly-lock" inline>lock</mat-icon>
+            }
+            @if (field.metadata) {
+            <mat-icon class="metadata-icon" inline>data_object</mat-icon>
             }
             {{field.label}}
         </mat-label>
@@ -246,7 +264,7 @@
                 {{ field.label }}
             </label>
             @for (opt of allOptions(); track opt.value) {
-            <mat-checkbox [checked]="form.get(field.name)?.value?.includes(opt.value)" [disabled]="!!field.readonly"
+            <mat-checkbox [checked]="$safeNavigationMigration(form.get(field.name)?.value?.includes(opt.value))" [disabled]="!!field.readonly"
                 (change)="onToggleCheckboxMultiple(field.name, opt.value, $event.checked)">
                 {{ opt.label }}
             </mat-checkbox>

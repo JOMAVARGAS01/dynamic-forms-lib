@@ -52,6 +52,13 @@ export interface BaseField {
   value?: any;
   readonly?: boolean;
   /**
+   * Campo de METADATA dinámica (MET_VALOR, no columna real de la tabla): el
+   * FE lo marca con `metadata: true` en su FormConfig para que la lib lo
+   * distinga visualmente (clase `.metadata-field` + ícono `data_object` en el
+   * label). Solo afecta el render; el valor viaja igual en el payload.
+   */
+  metadata?: boolean;
+  /**
    * Campo CALCULADO (solo informativo): el valor lo produce la función
    * cada vez que cambia el form (raíz y/o el item del form-array que lo
    * contiene) y se escribe en el control con emitEvent:false — el usuario

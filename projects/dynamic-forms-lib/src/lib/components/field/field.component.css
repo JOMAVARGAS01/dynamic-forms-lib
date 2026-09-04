@@ -63,6 +63,30 @@ textarea[readonly] {
   margin-right: 4px;
 }
 
+/* Ícono de campo de metadata dinámica (mat-icon data_object, dorado suave) */
+.metadata-icon {
+  vertical-align: middle;
+  font-size: inherit;
+  color: #b8860b;
+  margin-right: 4px;
+}
+
+/* Campo de metadata dinámica (MET_VALOR): fondo amarillo pastel + borde
+   tenue para distinguirlo de una columna real de la tabla. La clase la
+   aplica el template con [class.metadata-field]="!!field.metadata". */
+.metadata-field .mat-mdc-form-field-flex {
+  background-color: #fff8dc !important;
+  border-radius: 6px;
+  border: 1px solid #e8d77a;
+}
+
+.metadata-field .mat-mdc-form-field-infix,
+.metadata-field .mat-mdc-input-element,
+.metadata-field .mat-mdc-select-value,
+.metadata-field .mat-mdc-select-arrow {
+  color: #7a5b00;
+}
+
 /* ── Chips (selección múltiple, p.ej. EnviarA) ── */
 .chips-grid {
   display: flex;

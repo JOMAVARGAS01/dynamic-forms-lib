@@ -230,6 +230,10 @@ export class FormsComponent implements OnInit {
       this.cdr.markForCheck();
     });
     this.updateVisibility();
+    // Con el form ya poblado (patchForm corrió antes en ngOnInit), aplicar
+    // los cálculos una vez para que los campos calculados muestren su valor
+    // inicial al abrir (add/edit) sin esperar a que el usuario edite.
+    this.applyCalculations();
   }
 
   /**

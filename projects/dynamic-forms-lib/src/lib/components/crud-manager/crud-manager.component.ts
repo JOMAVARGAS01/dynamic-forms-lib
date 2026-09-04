@@ -165,6 +165,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   };
 
   defaultColDef: ColDef = {
+    filter: true,
     floatingFilter: false,
   };
 

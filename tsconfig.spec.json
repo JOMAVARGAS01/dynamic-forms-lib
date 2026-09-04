@@ -6,9 +6,21 @@
     "outDir": "./out-tsc/spec",
     "types": [
       "jasmine"
-    ]
+    ],
+    "paths": {
+      "@dynamic-forms-lib": ["./projects/dynamic-forms-lib/src/public-api.ts"],
+      "@dynamic-forms-lib/*": ["./projects/dynamic-forms-lib/src/lib/*"]
+    }
   },
   "include": [
     "src/**/*.ts"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

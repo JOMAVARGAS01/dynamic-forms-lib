@@ -32,10 +32,9 @@ export function normalizeGroupLayout(fields: FieldConfig[]): FieldConfig[] {
     if (lastInRow >= 0 && !isHidden(clones[lastInRow])) {
       const deficit = 12 - rowSum;
       if (deficit > 0) {
-        const lastCols = clones[lastInRow].gridCols && clones[lastInRow].gridCols > 0
-          ? clones[lastInRow].gridCols
-          : 12;
-        clones[lastInRow].gridCols = lastCols + deficit;
+        const current = clones[lastInRow];
+        const lastCols = current.gridCols && current.gridCols > 0 ? current.gridCols : 12;
+        current.gridCols = lastCols + deficit;
       }
     }
     rowSum = 0;

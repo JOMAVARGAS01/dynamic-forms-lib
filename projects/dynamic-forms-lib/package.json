@@ -1,6 +1,6 @@
 {
   "name": "@dynamic-forms-lib/core",
-  "version": "0.3.24",
+  "version": "0.5.0",
   "description": "Enterprise CRUD screens with JSON config — AG Grid, dynamic Angular Material forms, Excel export, and theming",
   "module": "fesm2022/dynamic-forms-lib-core.mjs",
   "types": "index.d.ts",
@@ -14,10 +14,10 @@
   },
   "homepage": "https://github.com/JOMAVARGAS01/dynamic-forms-lib",
   "peerDependencies": {
-    "@angular/common": "^20.0.0",
-    "@angular/core": "^20.0.0",
-    "@angular/forms": "^20.0.0",
-    "@angular/material": "^20.0.0",
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
+    "@angular/material": "^22.0.0",
     "ag-grid-angular": "^34.0.0",
     "ag-grid-community": "^34.0.0"
   },

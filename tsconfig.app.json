@@ -6,8 +6,8 @@
     "outDir": "./out-tsc/app",
     "types": [],
     "paths": {
-      "@dynamic-forms-lib": ["projects/dynamic-forms-lib/src/public-api.ts"],
-      "@dynamic-forms-lib/*": ["projects/dynamic-forms-lib/src/lib/*"]
+      "@dynamic-forms-lib": ["./projects/dynamic-forms-lib/src/public-api.ts"],
+      "@dynamic-forms-lib/*": ["./projects/dynamic-forms-lib/src/lib/*"]
     }
   },
   "include": [
@@ -15,5 +15,13 @@
   ],
   "exclude": [
     "src/**/*.spec.ts"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

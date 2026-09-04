@@ -277,6 +277,10 @@ export class FieldComponent implements OnInit {
     return valueString;
   };
 
+  /** Coerce types for select matching (number vs string). */
+  compareFn = (a: any, b: any) =>
+    a === b ? true : a == null || b == null ? false : String(a) === String(b);
+
   // ── Chips: selección múltiple con tokens ';'-separados (p.ej. EnviarA) ──
 
   /** Texto del input de búsqueda. */
@@ -326,7 +330,7 @@ export class FieldComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  private chipsSearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private chipsSearchTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** Busca opciones en el API del campo (usuarios por tecla). Con texto vacío
    *  trae todos; las options estáticas (roles) se mantienen en la lista. */
@@ -540,7 +544,7 @@ export class FieldComponent implements OnInit {
 
   /** Limpia el debounce de búsqueda de chips al destruir el componente. */
   ngOnDestroy(): void {
-    if (this.chipsSearchTimer !== null) {
+    if (this.chipsSearchTimer !== undefined) {
       clearTimeout(this.chipsSearchTimer);
     }
   }
