@@ -12,15 +12,21 @@
             {{field.label}}
         </mat-label>
 
-        <!-- Prefix -->
-        @if (field.prefix) {
+        <!-- Prefix. CADA @if lleva UN solo nodo raíz con su directiva: si el
+             adorno estuviera en ramas @if/@else anidadas (>1 nodo raíz), la
+             proyección al slot del mat-form-field no ocurre (NG8011) y el
+             span cae dentro del infix (símbolo en línea aparte del input). -->
+        @if (field.prefix && field.prefix.isIcon !== false) {
         <span matPrefix class="field-prefix-suffix">
-            @if (field.prefix.isIcon !== false) {
             <mat-icon>{{field.prefix.icon}}</mat-icon>
-            } @else {
-            {{field.prefix.text}}
-            }
             &nbsp;
+        </span>
+        }
+        @if (field.prefix && field.prefix.isIcon === false) {
+        <!-- matTextPrefix (no matPrefix): el texto se alinea por línea base del
+             input. matPrefix es para iconos/botones y deja el texto "arriba". -->
+        <span matTextPrefix class="field-prefix-suffix">
+            {{field.prefix.text}}&nbsp;
         </span>
         }
 
@@ -49,15 +55,18 @@
         @default { <input matInput [type]="field.type" [formControlName]="field.name" [readonly]="field.readonly" /> }
         }
 
-        <!-- Suffix -->
-        @if (field.suffix) {
+        <!-- Suffix. Misma regla que el Prefix: un solo nodo raíz por @if para
+             que la proyección al slot funcione (ver comentario del Prefix). -->
+        @if (field.suffix && field.suffix.isIcon !== false) {
         <span matSuffix class="field-prefix-suffix">
-            @if (field.suffix.isIcon !== false) {
             <mat-icon>{{field.suffix.icon}}</mat-icon>
-            } @else {
-            {{field.suffix.text}}
-            }
             &nbsp;
+        </span>
+        }
+        @if (field.suffix && field.suffix.isIcon === false) {
+        <!-- matTextSuffix (no matSuffix): texto alineado por línea base (ver Prefix). -->
+        <span matTextSuffix class="field-prefix-suffix">
+            &nbsp;{{field.suffix.text}}
         </span>
         }
 
