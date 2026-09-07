@@ -3,6 +3,15 @@
 .file-content-row { display: flex; align-items: center; gap: 12px; }
 .file-name { font-size: 0.9rem; color: #666; }
 .loading-option { display: flex; align-items: center; }
+/* Ícono dentro de opciones/trigger de selects con `iconOptions` (0.6.1). */
+.select-option-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
 .error-text { color: red; }
 .checkbox-container { padding: 8px 0; }
 .unsupported-field { color: #b71c1c; padding: 8px; border-radius: 4px; background: #fff2f2; }

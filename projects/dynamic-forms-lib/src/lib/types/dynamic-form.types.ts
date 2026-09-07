@@ -41,7 +41,7 @@ export interface ApiConfig {
   searchParam?: string;
 }
 
-export interface Option { label: string; value: any; disabled?: boolean }
+export interface Option { label: string; value: any; disabled?: boolean; icon?: string }
 
 export interface BaseField {
   type: NonArrayControlType;
@@ -104,6 +104,8 @@ export interface SelectField extends BaseField {
   type: 'select' | 'autocomplete';
   options?: Option[];
   api?: ApiConfig;
+  /** true = pinta el icono de cada option (Option.icon) en el panel y como preview del valor seleccionado. */
+  iconOptions?: boolean;
   dependentOptions?: {
     field: string;
     map: Record<string, Option[]>;

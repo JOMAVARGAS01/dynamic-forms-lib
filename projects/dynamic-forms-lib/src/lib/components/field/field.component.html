@@ -126,6 +126,14 @@
             {{field.label}}
         </mat-label>
         <mat-select [formControlName]="field.name" [compareWith]="compareFn" [disabled]="!!field.readonly">
+            @if (hasIconOptions(field)) {
+            <mat-select-trigger>
+                @if (selectedIconOption()?.icon) {
+                <mat-icon class="select-option-icon">{{ selectedIconOption()?.icon }}</mat-icon>
+                }
+                {{ selectedIconOption()?.label ?? '' }}
+            </mat-select-trigger>
+            }
             @if (isLoadingOptions()) {
             <mat-option disabled class="loading-option">
                 <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
@@ -133,7 +141,12 @@
             </mat-option>
             }
             @for (opt of allOptions(); track opt.value) {
-            <mat-option [value]="opt.value" [disabled]="opt.disabled">{{opt.label}}</mat-option>
+            <mat-option [value]="opt.value" [disabled]="opt.disabled">
+                @if (hasIconOptions(field) && opt.icon) {
+                <mat-icon class="select-option-icon">{{ opt.icon }}</mat-icon>
+                }
+                {{opt.label}}
+            </mat-option>
             }
         </mat-select>
         @if (hasQuickAdd()) {

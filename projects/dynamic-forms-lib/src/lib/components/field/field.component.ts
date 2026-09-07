@@ -27,7 +27,7 @@ import { QuickAddDialogComponent } from '../quick-add-dialog/quick-add-dialog.co
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
-type Option = { label: string, value: any, disabled?: boolean };
+type Option = { label: string, value: any, disabled?: boolean, icon?: string };
 
 @Component({
   selector: 'app-field',
@@ -280,6 +280,23 @@ export class FieldComponent implements OnInit {
   /** Coerce types for select matching (number vs string). */
   compareFn = (a: any, b: any) =>
     a === b ? true : a == null || b == null ? false : String(a) === String(b);
+
+  /**
+   * Opción seleccionada del select (para el preview de íconos cuando el
+   * campo declara `iconOptions: true`). Compara por String igual que
+   * displayOption/compareFn (número vs string).
+   */
+  readonly selectedIconOption = computed(() => {
+    const control = this.form?.get(this.field.name);
+    const value = control?.value;
+    if (value === null || value === undefined || typeof value === 'object') return undefined;
+    const valueString = String(value);
+    return this.allOptions().find(opt => String(opt.value) === valueString);
+  });
+
+  /** Select con preview de íconos (opt-in por campo, ver SelectField.iconOptions). */
+  hasIconOptions = (f: FieldConfig): boolean =>
+    (f as SelectField).iconOptions === true;
 
   // ── Chips: selección múltiple con tokens ';'-separados (p.ej. EnviarA) ──
 
