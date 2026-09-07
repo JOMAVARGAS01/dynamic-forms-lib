@@ -11,6 +11,7 @@ export * from './lib/services/dynamic-options.service';
 export * from './lib/services/form-config-registry.service';
 export * from './lib/services/theme.service';
 export * from './lib/services/sidebar.service';
+export * from './lib/services/excel-export.builder';
 export * from './lib/types/dynamic-form.types';
 export { FORM_FIELD_APPEARANCE_TOKEN } from './lib/types/dynamic-form.types';
 export type { FormFieldAppearance } from './lib/types/dynamic-form.types';

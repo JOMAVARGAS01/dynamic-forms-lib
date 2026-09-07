@@ -23,8 +23,8 @@ import { AgGridColumnsMenuComponent } from '../ag-grid-columns-menu/ag-grid-colu
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { HttpClient } from '@angular/common/http';
-import * as ExcelJS from 'exceljs';
 import { SidebarService } from '../../services/sidebar.service';
+import { exportToExcel, ExcelCellValue } from '../../services/excel-export.builder';
 import { ThemeService } from '../../services/theme.service';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { DYNAMIC_FORMS_TRANSLATIONS, DynamicFormsTranslations, DEFAULT_TRANSLATIONS } from '../../types/translations';
@@ -249,53 +249,13 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   /** Exports the visible grid data (excluding actions column) to an Excel file. */
   async onExport(): Promise<void> {
     if (!this.resolvedPermissions().canExport) return;
-    const { blob, filename } = await this.buildExcelExport();
-    this.downloadFile(blob, filename);
-  }
 
-  /**
-   * Builds the Excel workbook from the current grid data and returns
-   * a blob + filename ready for download. Pulls visible columns from
-   * the grid, writes a title row, a date row, the header row, and
-   * one row per filtered node.
-   */
-  private async buildExcelExport(): Promise<{ blob: Blob; filename: string }> {
     const actionsHeader = this.t().crud.actions;
     const visibleColumns = this.gridApi.getAllDisplayedColumns()
       .filter(col => col.getColDef().headerName !== actionsHeader);
 
-    const headers = visibleColumns.map(col => col.getColDef().headerName || col.getColDef().field);
+    const headers = visibleColumns.map(col => (col.getColDef().headerName || col.getColDef().field) ?? '');
     const fields = visibleColumns.map(col => col.getColDef().field || null);
-
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet('Datos');
-
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-
-    // Title row (merged across all columns)
-    ws.mergeCells(1, 1, 1, Math.max(1, headers.length));
-    const titleCell = ws.getCell(1, 1);
-    titleCell.value = this.title;
-    titleCell.font = { size: 20, bold: true };
-
-    // Date row
-    const dateCell = ws.getCell(2, 1);
-    dateCell.value = `Fecha: ${formattedDate}`;
-    dateCell.font = { bold: true };
-
-    // Header row at index 4 (rows 1-3 are reserved for title + date)
-    const headerRowIndex = 4;
-    ws.getRow(headerRowIndex).values = headers;
-    const headerRow = ws.getRow(headerRowIndex);
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F81BD' } };
-      cell.alignment = { horizontal: 'center' };
-    });
-
-    // Column widths
-    ws.columns = headers.map(h => ({ width: Math.min((String(h || '').length || 10) + 5, 50) }));
 
     // Data rows (respects current filter). El TIPO de la celda lo decide la
     // colDef (fuente de verdad), NO el valor:
@@ -316,6 +276,7 @@ export class CrudManagerComponent implements OnInit, OnChanges {
       if (col.field) declaredCellTypes.set(col.field, col.cellDataType);
     });
 
+    const rows: ExcelCellValue[][] = [];
     const firstValues: any[] = fields.map(() => null);
     this.gridApi.forEachNodeAfterFilter((node) => {
       if (node.data) {
@@ -325,31 +286,29 @@ export class CrudManagerComponent implements OnInit, OnChanges {
           if (firstValues[i] === null && typed !== null) firstValues[i] = typed;
           return typed;
         });
-        ws.addRow(row);
+        rows.push(row);
       }
     });
 
     // numFmt por columna según el tipo resultante (montos/fechas DECLARADAS o
     // detectadas); los números NO declarados como monto quedan sin formato.
-    const dataStartRow = headerRowIndex + 1;
-    const dataRowCount = ws.actualRowCount - (dataStartRow - 1);
-    fields.forEach((field, i) => {
+    const numFmts: (string | undefined)[] = fields.map((field, i) => {
       const sample = firstValues[i];
-      const fmt = sample instanceof Date ? 'dd/mm/yyyy'
+      return sample instanceof Date ? 'dd/mm/yyyy'
         : typeof sample === 'number' && declaredCellTypes.get(field ?? '') === 'number' ? '#,##0.00'
         : undefined;
-      if (!fmt) return;
-      for (let r = dataStartRow; r < dataStartRow + dataRowCount; r++) {
-        ws.getCell(r, i + 1).numFmt = fmt;
-      }
     });
 
-    const filenameDate = formattedDate.replace(/-/g, '');
-    const filename = `${this.title} ${filenameDate}.xlsx`;
-
-    const buffer = await wb.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    return { blob, filename };
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    await exportToExcel({
+      title: this.title,
+      dateLine: `Fecha: ${formattedDate}`,
+      headers,
+      rows,
+      numFmts,
+      filename: `${this.title} ${formattedDate.replace(/-/g, '')}.xlsx`,
+    });
   }
 
   /**
@@ -407,21 +366,6 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   private toDateOrNull(v: any): Date | null {
     const d = v instanceof Date ? v : new Date(String(v));
     return Number.isNaN(d.getTime()) ? null : d;
-  }
-
-  /**
-   * Triggers a browser download for the given blob with the specified filename.
-   * Cleans up the temporary object URL after the click event fires.
-   */
-  private downloadFile(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
   }
 
   /** Opens the sidebar in 'add' mode for creating a new record. */
