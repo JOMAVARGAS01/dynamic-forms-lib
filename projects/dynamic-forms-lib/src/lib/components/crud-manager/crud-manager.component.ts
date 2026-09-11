@@ -158,7 +158,8 @@ export class CrudManagerComponent implements OnInit, OnChanges {
   gridOptions: GridOptions = {
     domLayout: 'autoHeight',
     pagination: true,
-    paginationPageSize: 20,
+    paginationPageSize: 10,
+    paginationPageSizeSelector: [10, 20, 50, 100],
     context: {
       componentParent: this,
     },
