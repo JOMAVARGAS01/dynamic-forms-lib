@@ -213,7 +213,12 @@ export class FieldComponent implements OnInit {
             control.setValue(valueToRestore, { emitEvent: false });
             this.cdr.markForCheck();
           }, 0);
-        } else {
+        } else if (f.validations?.required) {
+          // SOLO un select REQUERIDO toma la primera opción como default.
+          // Un select opcional con valor vacío debe quedar VACÍO: antes tomaba
+          // la primera opción y ese valor inventado se guardaba (bug reportado
+          // con el custodio del activo: un activo sin custodio aparecía con el
+          // primer empleado de la lista y se persistía al guardar).
           control.setValue(combined[0].value);
         }
       }
